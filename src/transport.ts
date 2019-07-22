@@ -15,17 +15,17 @@ type NegotiaionPayload = NegotiaionSDPPayload | NegotiaionCandidaatePayload;
 
 class Transport extends EventEmitter {
   _pc: RTCPeerConnection;
-  _dc: RTCDataChannel;
 
   constructor(pc: RTCPeerConnection) {
     super();
     this._pc = pc;
     this._pc.addEventListener("icecandidate", this, false);
     this._pc.addEventListener("iceconnectionstatechange", this, false);
+    // Chrome only
     this._pc.addEventListener("connectionstatechange", this, false);
 
-    this._dc = pc.createDataChannel("", { negotiated: true, id: 0 });
-    this._dc.onopen = () => console.warn("OPEN");
+    const dc = pc.createDataChannel("signaling", { negotiated: true, id: 0 });
+    dc.onopen = () => console.warn("OPEN");
   }
 
   close() {
@@ -120,18 +120,18 @@ class Transport extends EventEmitter {
 
   private _handleCandidateEvent(ev: RTCPeerConnectionIceEvent) {
     if (ev.candidate === null) return;
-    // Firefox 68~ emits this but otheres can not recognize...
+    // Firefox 68~ emits this but others can not recognize...
     if (ev.candidate.candidate === "") return;
     this.emit("negotiation", { type: "candidate", data: ev.candidate });
   }
 
   private _handleIceConnectionStateChangeEvent() {
-    debug("iceConnectionStateChange", this._pc.iceConnectionState);
+    debug("iceConnectionState", this._pc.iceConnectionState);
     this.emit("iceConnectionState", this._pc.iceConnectionState);
   }
 
   private _handleConnectionStateChangeEvent() {
-    debug("connectionStateChange", this._pc.connectionState);
+    debug("connectionState", this._pc.connectionState);
     this.emit("connectionState", this._pc.connectionState);
   }
 }
