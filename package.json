@@ -1,0 +1,55 @@
+{
+  "name": "simple-p2p",
+  "version": "0.0.0",
+  "description": "The simple p2p module for modern browsers.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc -p .",
+    "lint": "eslint . --ext=js,ts && tsc -p . --noEmit",
+    "test": "karma start",
+    "test:watch": "karma start --no-single-run --auto-watch --no-browsers"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leader22/simple-p2p.git"
+  },
+  "keywords": [
+    "webrtc",
+    "p2p"
+  ],
+  "author": "Yuji Sugiura",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/leader22/simple-p2p/issues"
+  },
+  "homepage": "https://github.com/leader22/simple-p2p#readme",
+  "devDependencies": {
+    "@types/debug": "^4.1.4",
+    "@typescript-eslint/eslint-plugin": "^1.12.0",
+    "@typescript-eslint/parser": "^1.12.0",
+    "eslint": "^6.0.1",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "jasmine": "^3.4.0",
+    "karma": "^4.2.0",
+    "karma-chrome-launcher": "^3.0.0",
+    "karma-firefox-launcher": "^1.1.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-mocha-reporter": "^2.2.5",
+    "karma-rollup-preprocessor": "^7.0.0",
+    "karma-safari-launcher": "^1.0.0",
+    "prettier": "^1.18.2",
+    "rollup": "^1.17.0",
+    "rollup-plugin-commonjs": "^10.0.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "debug": "^4.1.1",
+    "eventemitter3": "^4.0.0"
+  }
+}
