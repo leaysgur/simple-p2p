@@ -12,23 +12,38 @@ interface NegotiaionCandidaatePayload {
   data: RTCIceCandidate;
 }
 type NegotiaionPayload = NegotiaionSDPPayload | NegotiaionCandidaatePayload;
+type ConnectionState =
+  | "new"
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "failed"
+  | "closed";
 
 class Transport extends EventEmitter {
   _pc: RTCPeerConnection;
+  _connectionState: ConnectionState;
 
   constructor(pc: RTCPeerConnection) {
     super();
     this._pc = pc;
     this._pc.addEventListener("icecandidate", this, false);
     this._pc.addEventListener("iceconnectionstatechange", this, false);
-    // Chrome only
+    // only Chrome has this event
     this._pc.addEventListener("connectionstatechange", this, false);
+
+    this._connectionState = "new";
 
     const dc = pc.createDataChannel("signaling", { negotiated: true, id: 0 });
     dc.onopen = () => console.warn("OPEN");
   }
 
+  get connectionState() {
+    return this._connectionState;
+  }
+
   close() {
+    debug("close()");
     this._pc.removeEventListener("icecandidate", this, false);
     this._pc.removeEventListener("iceconnectionstatechange", this, false);
     this._pc.removeEventListener("connectionstatechange", this, false);
@@ -127,12 +142,57 @@ class Transport extends EventEmitter {
 
   private _handleIceConnectionStateChangeEvent() {
     debug("iceConnectionState", this._pc.iceConnectionState);
-    this.emit("iceConnectionState", this._pc.iceConnectionState);
+
+    let newState: ConnectionState;
+    switch (this._pc.iceConnectionState) {
+      case "checking":
+        newState = "connecting";
+        break;
+      case "connected":
+      case "completed":
+        newState = "connected";
+        break;
+      case "disconnected":
+        newState = "disconnected";
+        break;
+      case "failed":
+        newState = "failed";
+        break;
+      case "closed":
+        newState = "closed";
+        break;
+      default:
+        // set current value to ignore
+        newState = this._connectionState;
+    }
+
+    if (this._connectionState === newState) return;
+    this._connectionState = newState;
+    this.emit("connectionStateChange", this._connectionState);
   }
 
   private _handleConnectionStateChangeEvent() {
     debug("connectionState", this._pc.connectionState);
-    this.emit("connectionState", this._pc.connectionState);
+
+    let newState: ConnectionState;
+    switch (this._pc.connectionState) {
+      case "disconnected":
+        newState = "disconnected";
+        break;
+      case "failed":
+        newState = "failed";
+        break;
+      case "closed":
+        newState = "closed";
+        break;
+      default:
+        // set current value to ignore
+        newState = this._connectionState;
+    }
+
+    if (this._connectionState === newState) return;
+    this._connectionState = newState;
+    this.emit("connectionStateChange", this._connectionState);
   }
 }
 
