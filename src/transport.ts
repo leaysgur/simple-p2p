@@ -21,18 +21,19 @@ type ConnectionState =
   | "closed";
 
 class Transport extends EventEmitter {
-  _pc: RTCPeerConnection;
   _connectionState: ConnectionState;
+  _pc: RTCPeerConnection;
 
   constructor(pc: RTCPeerConnection) {
     super();
+
+    this._connectionState = "new";
+
     this._pc = pc;
     this._pc.addEventListener("icecandidate", this, false);
     this._pc.addEventListener("iceconnectionstatechange", this, false);
     // only Chrome has this event
     this._pc.addEventListener("connectionstatechange", this, false);
-
-    this._connectionState = "new";
 
     const dc = pc.createDataChannel("signaling", { negotiated: true, id: 0 });
     dc.onopen = () => console.warn("OPEN");
