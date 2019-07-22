@@ -38,6 +38,7 @@ class Transport extends EventEmitter {
     this._pc.addEventListener("connectionstatechange", this, false);
 
     const dc = pc.createDataChannel("signaling", { negotiated: true, id: 0 });
+
     this._peer = new Peer(pc, dc);
   }
 
