@@ -21,6 +21,8 @@ class Transport extends EventEmitter {
     super();
     this._pc = pc;
     this._pc.addEventListener("icecandidate", this, false);
+    this._pc.addEventListener("iceconnectionstatechange", this, false);
+    this._pc.addEventListener("connectionstatechange", this, false);
 
     this._dc = pc.createDataChannel("", { negotiated: true, id: 0 });
     this._dc.onopen = () => console.warn("OPEN");
@@ -28,20 +30,25 @@ class Transport extends EventEmitter {
 
   close() {
     this._pc.removeEventListener("icecandidate", this, false);
+    this._pc.removeEventListener("iceconnectionstatechange", this, false);
+    this._pc.removeEventListener("connectionstatechange", this, false);
     this._pc.close();
   }
 
   handleEvent(ev: Event) {
     switch (ev.type) {
-      case "icecandidate": {
+      case "icecandidate":
         return this._handleCandidateEvent(ev as RTCPeerConnectionIceEvent);
-      }
+      case "iceconnectionstatechange":
+        return this._handleIceConnectionStateChangeEvent();
+      case "connectionstatechange":
+        return this._handleConnectionStateChangeEvent();
     }
   }
 
-  async startNegotiation() {
+  async startNegotiation(iceRestart = false) {
     debug("startNegotiation()");
-    const offer = await this._pc.createOffer();
+    const offer = await this._pc.createOffer({ iceRestart });
     await this._pc.setLocalDescription(offer);
 
     debug("emit offer SDP");
@@ -63,9 +70,13 @@ class Transport extends EventEmitter {
     }
   }
 
+  async restartIce() {
+    debug("restartIce()");
+    return this.startNegotiation(true);
+  }
+
   private async _handleOffer(offer: RTCSessionDescription) {
     debug("handle offer SDP");
-
     if (offer.type !== "offer") {
       throw new Error("Received SDP is not an offer!");
     }
@@ -93,7 +104,6 @@ class Transport extends EventEmitter {
 
   private async _handleAnswer(answer: RTCSessionDescription) {
     debug("handle answer SDP");
-
     if (answer.type !== "answer") {
       throw new Error("Received SDP is not an answer!");
     }
@@ -113,6 +123,16 @@ class Transport extends EventEmitter {
     // Firefox 68~ emits this but otheres can not recognize...
     if (ev.candidate.candidate === "") return;
     this.emit("negotiation", { type: "candidate", data: ev.candidate });
+  }
+
+  private _handleIceConnectionStateChangeEvent() {
+    debug("iceConnectionStateChange", this._pc.iceConnectionState);
+    this.emit("iceConnectionState", this._pc.iceConnectionState);
+  }
+
+  private _handleConnectionStateChangeEvent() {
+    debug("connectionStateChange", this._pc.connectionState);
+    this.emit("connectionState", this._pc.connectionState);
   }
 }
 
