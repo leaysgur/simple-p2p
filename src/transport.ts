@@ -1,5 +1,6 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
+import Peer from "./peer";
 
 const debug = _debug("simple-p2p:transport");
 
@@ -23,6 +24,7 @@ type ConnectionState =
 class Transport extends EventEmitter {
   _connectionState: ConnectionState;
   _pc: RTCPeerConnection;
+  _peer: Peer;
 
   constructor(pc: RTCPeerConnection) {
     super();
@@ -36,11 +38,15 @@ class Transport extends EventEmitter {
     this._pc.addEventListener("connectionstatechange", this, false);
 
     const dc = pc.createDataChannel("signaling", { negotiated: true, id: 0 });
-    dc.onopen = () => console.warn("OPEN");
+    this._peer = new Peer(pc, dc);
   }
 
   get connectionState() {
     return this._connectionState;
+  }
+
+  get peer() {
+    return this._peer;
   }
 
   close() {
