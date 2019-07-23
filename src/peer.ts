@@ -107,7 +107,6 @@ class Peer extends EventEmitter {
       return reject(err);
     }
 
-    // TODO: return recver can stop
     const transceiver = this._pc.getTransceivers().pop();
     // must not be happend
     if (!transceiver) {
@@ -115,8 +114,9 @@ class Peer extends EventEmitter {
     }
 
     if (transceiver.currentDirection === "recvonly") {
-      this.emit("media", transceiver);
+      this.emit("media", transceiver.receiver.track);
     }
+    // else inactivated transceiver
   }
   private _handleCloseEvent() {
     this._closed = true;
