@@ -9,6 +9,7 @@ class Peer extends EventEmitter {
   _closed: boolean;
   _stream: MediaStream;
   _transceivers: Map<string, RTCRtpTransceiver>;
+  _dataChannelId: number;
   _pc: RTCPeerConnection;
   _pdc: PromisedDataChannel;
 
@@ -18,6 +19,7 @@ class Peer extends EventEmitter {
     this._closed = false;
     this._stream = new MediaStream();
     this._transceivers = new Map();
+    this._dataChannelId = 10;
 
     this._pc = pc;
     this._pdc = promised(dc);
@@ -55,6 +57,22 @@ class Peer extends EventEmitter {
     const sender = new Sender();
     this._handleSenderEvent(mid, sender);
     return sender;
+  }
+
+  async createDataChannel(label: string = "", dcInit: RTCDataChannelInit = {}) {
+    debug("createDataChannel()");
+    Object.assign(dcInit, {
+      negotiated: true,
+      id: this._dataChannelId
+    });
+
+    const dc = this._pc.createDataChannel(label, dcInit);
+    this._dataChannelId++;
+
+    // TODO: close if reject
+    await this._pdc.send({ type: "datachannel", data: { label, dcInit } });
+
+    return dc;
   }
 
   private async _startNegotiation() {
@@ -96,12 +114,25 @@ class Peer extends EventEmitter {
     this.emit("open");
   }
   private async _handleMessageEvent(
-    data: RTCSessionDescriptionInit,
-    resolve: (answer: RTCSessionDescriptionInit) => void,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    message: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolve: (res: any) => void,
     reject: (err: Error) => void
   ) {
+    if (message.type === "datachannel") {
+      const { label, dcInit } = message.data;
+      const dc = this._pc.createDataChannel(label, dcInit);
+      this._dataChannelId++;
+
+      this.emit("data", dc);
+      return resolve(null);
+    }
+
     try {
-      const answer = await this._handleNegotiation(data);
+      const answer = await this._handleNegotiation(
+        message as RTCSessionDescriptionInit
+      );
       resolve(answer);
     } catch (err) {
       return reject(err);
