@@ -151,28 +151,15 @@ class Transport extends EventEmitter {
   private _handleIceConnectionStateChangeEvent() {
     debug("iceConnectionState", this._pc.iceConnectionState);
 
-    let newState: ConnectionState;
-    switch (this._pc.iceConnectionState) {
-      case "checking":
-        newState = "connecting";
-        break;
-      case "connected":
-      case "completed":
-        newState = "connected";
-        break;
-      case "disconnected":
-        newState = "disconnected";
-        break;
-      case "failed":
-        newState = "failed";
-        break;
-      case "closed":
-        newState = "closed";
-        break;
-      default:
-        // set current value to ignore
-        newState = this._connectionState;
-    }
+    const newState = ({
+      new: null,
+      checking: "connecting",
+      connected: "connected",
+      completed: "connected",
+      disconnected: "disconnected",
+      failed: "failed",
+      closed: "closed"
+    }[this._pc.iceConnectionState] || this._connectionState) as ConnectionState;
 
     if (this._connectionState === newState) return;
     this._connectionState = newState;
@@ -182,21 +169,15 @@ class Transport extends EventEmitter {
   private _handleConnectionStateChangeEvent() {
     debug("connectionState", this._pc.connectionState);
 
-    let newState: ConnectionState;
-    switch (this._pc.connectionState) {
-      case "disconnected":
-        newState = "disconnected";
-        break;
-      case "failed":
-        newState = "failed";
-        break;
-      case "closed":
-        newState = "closed";
-        break;
-      default:
-        // set current value to ignore
-        newState = this._connectionState;
-    }
+    // use only failure cases for Chrome
+    const newState = ({
+      new: null,
+      connecting: null,
+      connected: null,
+      disconnected: "disconnected",
+      failed: "failed",
+      closed: "closed"
+    }[this._pc.connectionState] || this._connectionState) as ConnectionState;
 
     if (this._connectionState === newState) return;
     this._connectionState = newState;
