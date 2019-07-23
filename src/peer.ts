@@ -1,12 +1,14 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
 import { promised, PromisedDataChannel } from "enhanced-datachannel";
+import Sender from "./sender";
 
 const debug = _debug("simple-p2p:peer");
 
 class Peer extends EventEmitter {
   _closed: boolean;
   _stream: MediaStream;
+  _transceivers: Map<string, RTCRtpTransceiver>;
   _pc: RTCPeerConnection;
   _pdc: PromisedDataChannel;
 
@@ -15,6 +17,7 @@ class Peer extends EventEmitter {
 
     this._closed = false;
     this._stream = new MediaStream();
+    this._transceivers = new Map();
 
     this._pc = pc;
     this._pdc = promised(dc);
@@ -46,8 +49,12 @@ class Peer extends EventEmitter {
     });
     await this._startNegotiation();
 
-    // TODO: return sender can replace/stop
-    return transceiver;
+    const mid = String(transceiver.mid);
+    this._transceivers.set(mid, transceiver);
+
+    const sender = new Sender();
+    this._handleSenderEvent(mid, sender);
+    return sender;
   }
 
   private async _startNegotiation() {
@@ -102,7 +109,14 @@ class Peer extends EventEmitter {
 
     // TODO: return recver can stop
     const transceiver = this._pc.getTransceivers().pop();
-    this.emit("media", transceiver);
+    // must not be happend
+    if (!transceiver) {
+      throw new Error("Missing transceiver!");
+    }
+
+    if (transceiver.currentDirection === "recvonly") {
+      this.emit("media", transceiver);
+    }
   }
   private _handleCloseEvent() {
     this._closed = true;
@@ -110,6 +124,39 @@ class Peer extends EventEmitter {
   }
   private _handleErrorEvent(err: Error) {
     this.emit("error", err);
+  }
+
+  private _handleSenderEvent(mid: string, sender: Sender) {
+    sender.on("@replace", track => {
+      debug("sender.replace()");
+      const transceiver = this._transceivers.get(mid);
+      // must not be happend
+      if (!transceiver) {
+        throw new Error("Missing transceiver!");
+      }
+
+      transceiver.sender.replaceTrack(track);
+    });
+
+    sender.on(
+      "@stop",
+      async (resolve: () => void, reject: (err: Error) => void) => {
+        debug("sender.stop()");
+        const transceiver = this._transceivers.get(mid);
+        // must not be happend
+        if (!transceiver) {
+          throw new Error("Missing transceiver!");
+        }
+
+        transceiver.sender.replaceTrack(null);
+        this._pc.removeTrack(transceiver.sender);
+        // TODO: make whole m-section inactive
+        transceiver.direction = "inactive";
+        await this._startNegotiation()
+          .then(resolve)
+          .catch(reject);
+      }
+    );
   }
 }
 
