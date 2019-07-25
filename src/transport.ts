@@ -45,6 +45,7 @@ class Transport extends EventEmitter {
       pc.createDataChannel("signaling", { negotiated: true, id: 0 })
     );
     this._signaling.on("open", () => {
+      this.emit("open");
       this._mediaHandler.emit("open");
       this._dataHandler.emit("open");
     });

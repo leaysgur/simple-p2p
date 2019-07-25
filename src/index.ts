@@ -1,7 +1,8 @@
 import _debug from "debug";
 import Transport from "./transport";
-import Peer from "./peer";
-import Sender from "./sender";
+import MediaHandler from "./media-handler";
+import DataHandler from "./data-handler";
+import MediaSender from "./media-sender";
 
 const debug = _debug("simple-p2p");
 
@@ -18,5 +19,6 @@ export function createTransport(configuration: RTCConfiguration = {}) {
 }
 
 export type Transport = InstanceType<typeof Transport>;
-export type Peer = InstanceType<typeof Peer>;
-export type Sender = InstanceType<typeof Sender>;
+export type MediaHandler = InstanceType<typeof MediaHandler>;
+export type DataHandler = InstanceType<typeof DataHandler>;
+export type MediaSender = InstanceType<typeof MediaSender>;
