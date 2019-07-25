@@ -71,7 +71,7 @@ describe("simple-p2p", () => {
     await m2.sendMedia(aTrack.clone()).catch(console.error);
   });
 
-  fit("should send data", async done => {
+  it("should send data", async done => {
     const t1 = createTransport();
     const t2 = createTransport({});
     t1.on("negotiation", p => t2.handleNegotiation(p).catch(console.error));
@@ -95,6 +95,7 @@ describe("simple-p2p", () => {
 
     d1.on("data", c1 => {
       console.warn(c1);
+      expect(c1.ordered).toBeFalsy();
       done();
     });
     const c2 = await d2
