@@ -1,6 +1,8 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
-import Peer from "./peer";
+import { promised, PromisedDataChannel } from "enhanced-datachannel";
+import MediaHandler from "./media-handler";
+import DataHandler from "./data-handler";
 
 const debug = _debug("simple-p2p:transport");
 
@@ -24,7 +26,9 @@ type ConnectionState =
 class Transport extends EventEmitter {
   _connectionState: ConnectionState;
   _pc: RTCPeerConnection;
-  _peer: Peer;
+  _signaling: PromisedDataChannel;
+  _mediaHandler: MediaHandler;
+  _dataHandler: DataHandler;
 
   constructor(pc: RTCPeerConnection) {
     super();
@@ -37,17 +41,34 @@ class Transport extends EventEmitter {
     // only Chrome has this event
     this._pc.addEventListener("connectionstatechange", this, false);
 
-    const dc = pc.createDataChannel("signaling", { negotiated: true, id: 0 });
+    this._signaling = promised(
+      pc.createDataChannel("signaling", { negotiated: true, id: 0 })
+    );
+    this._signaling.on("open", () => {
+      this._mediaHandler.emit("open");
+      this._dataHandler.emit("open");
+    });
+    this._signaling.on("close", () => {
+      this._mediaHandler.close();
+      this._dataHandler.close();
+    });
+    this._signaling.on("error", err => {
+      this.emit("error", err);
+    });
 
-    this._peer = new Peer(pc, dc);
+    this._mediaHandler = new MediaHandler(pc, this._signaling);
+    this._dataHandler = new DataHandler(pc, this._signaling);
   }
 
   get connectionState() {
     return this._connectionState;
   }
 
-  get peer() {
-    return this._peer;
+  get mediaHandler() {
+    return this._mediaHandler;
+  }
+  get dataHandler() {
+    return this._dataHandler;
   }
 
   close() {

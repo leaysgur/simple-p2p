@@ -1,41 +1,41 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
-import { promised, PromisedDataChannel } from "enhanced-datachannel";
-import Sender from "./sender";
+import { PromisedDataChannel } from "enhanced-datachannel";
+import MediaSender from "./media-sender";
 
-const debug = _debug("simple-p2p:peer");
+const debug = _debug("simple-p2p:media-handler");
 
-class Peer extends EventEmitter {
+class MediaHandler extends EventEmitter {
   _closed: boolean;
   _stream: MediaStream;
   _transceivers: Map<string, RTCRtpTransceiver>;
-  _dataChannelId: number;
   _pc: RTCPeerConnection;
-  _pdc: PromisedDataChannel;
+  _signaling: PromisedDataChannel;
 
-  constructor(pc: RTCPeerConnection, dc: RTCDataChannel) {
+  constructor(pc: RTCPeerConnection, signaling: PromisedDataChannel) {
     super();
 
     this._closed = false;
     this._stream = new MediaStream();
     this._transceivers = new Map();
-    this._dataChannelId = 10;
 
     this._pc = pc;
-    this._pdc = promised(dc);
+    this._signaling = signaling;
 
-    this._pdc.on("open", () => this._handleOpenEvent());
-    this._pdc.on(
-      "message",
-      async (data, resolve, reject) =>
-        await this._handleMessageEvent(data, resolve, reject)
-    );
-    this._pdc.on("close", () => this._handleCloseEvent());
-    this._pdc.on("error", err => this._handleErrorEvent(err));
+    // TODO: typings
+    this._signaling.on("message", async (data, resolve, reject) => {
+      if (data.type === "datachannel") return;
+      await this._handleMessageEvent(data, resolve, reject);
+    });
   }
 
   get closed() {
     return this._closed;
+  }
+
+  close() {
+    debug("close()");
+    this._closed = true;
   }
 
   async sendMedia(track: MediaStreamTrack) {
@@ -43,7 +43,7 @@ class Peer extends EventEmitter {
 
     if (!(track instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
-    if (this._closed) throw new Error("Peer already closed!");
+    if (this._closed) throw new Error("MediaHandler already closed!");
 
     const transceiver = this._pc.addTransceiver(track, {
       direction: "sendonly",
@@ -54,25 +54,9 @@ class Peer extends EventEmitter {
     const mid = String(transceiver.mid);
     this._transceivers.set(mid, transceiver);
 
-    const sender = new Sender();
+    const sender = new MediaSender();
     this._handleSenderEvent(mid, sender);
     return sender;
-  }
-
-  async createDataChannel(label: string = "", dcInit: RTCDataChannelInit = {}) {
-    debug("createDataChannel()");
-    Object.assign(dcInit, {
-      negotiated: true,
-      id: this._dataChannelId
-    });
-
-    const dc = this._pc.createDataChannel(label, dcInit);
-    this._dataChannelId++;
-
-    // TODO: close if reject
-    await this._pdc.send({ type: "datachannel", data: { label, dcInit } });
-
-    return dc;
   }
 
   private async _startNegotiation() {
@@ -82,7 +66,7 @@ class Peer extends EventEmitter {
     debug(offer.sdp);
 
     // TODO: rollback if reject
-    const answer: RTCSessionDescriptionInit = await this._pdc.send(offer);
+    const answer: RTCSessionDescriptionInit = await this._signaling.send(offer);
     debug(answer.sdp);
     await this._pc.setRemoteDescription(answer);
   }
@@ -110,9 +94,6 @@ class Peer extends EventEmitter {
     return this._pc.localDescription;
   }
 
-  private _handleOpenEvent() {
-    this.emit("open");
-  }
   private async _handleMessageEvent(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     message: any,
@@ -120,15 +101,6 @@ class Peer extends EventEmitter {
     resolve: (res: any) => void,
     reject: (err: Error) => void
   ) {
-    if (message.type === "datachannel") {
-      const { label, dcInit } = message.data;
-      const dc = this._pc.createDataChannel(label, dcInit);
-      this._dataChannelId++;
-
-      this.emit("data", dc);
-      return resolve(null);
-    }
-
     try {
       const answer = await this._handleNegotiation(
         message as RTCSessionDescriptionInit
@@ -149,15 +121,8 @@ class Peer extends EventEmitter {
     }
     // else inactivated transceiver
   }
-  private _handleCloseEvent() {
-    this._closed = true;
-    this.emit("close");
-  }
-  private _handleErrorEvent(err: Error) {
-    this.emit("error", err);
-  }
 
-  private _handleSenderEvent(mid: string, sender: Sender) {
+  private _handleSenderEvent(mid: string, sender: MediaSender) {
     sender.on("@replace", track => {
       debug("sender.replace()");
       const transceiver = this._transceivers.get(mid);
@@ -191,4 +156,4 @@ class Peer extends EventEmitter {
   }
 }
 
-export default Peer;
+export default MediaHandler;
