@@ -74,7 +74,6 @@ class MediaHandler extends EventEmitter {
       // dispose transceiver...
       transceiver.sender.replaceTrack(null);
       this._pc.removeTrack(transceiver.sender);
-      // TODO: make whole m-section inactive
       transceiver.direction = "inactive";
 
       throw new Error("Remote handler failed to receive track!");
@@ -186,7 +185,6 @@ class MediaHandler extends EventEmitter {
 
         transceiver.sender.replaceTrack(null);
         this._pc.removeTrack(transceiver.sender);
-        // TODO: make whole m-section inactive
         transceiver.direction = "inactive";
 
         await this._startNegotiation()
