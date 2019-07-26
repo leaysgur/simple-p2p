@@ -1,10 +1,16 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
+import { SignalingPayload, SignalingOfferPayload } from "./types";
 import MediaSender from "./media-sender";
 
 const debug = _debug("simple-p2p:media-handler");
 
+/**
+ * Events
+ * @fires MediaHandler#track
+ * @fires MediaHandler#close
+ */
 class MediaHandler extends EventEmitter {
   _closed: boolean;
   _stream: MediaStream;
@@ -22,10 +28,18 @@ class MediaHandler extends EventEmitter {
     this._pc = pc;
     this._signaling = signaling;
 
-    // TODO: typings
-    this._signaling.on("message", async (data, resolve, reject) => {
-      if (data.type === "datachannel") return;
-      await this._handleMessageEvent(data, resolve, reject);
+    this._signaling.on("message", async (
+      message: SignalingPayload,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resolve: (res?: any) => void,
+      reject: (err: Error) => void
+    ) => {
+      if (message.type === "datachannel") return;
+      await this._handleMessageEvent(
+        message as SignalingOfferPayload,
+        resolve,
+        reject
+      );
     });
   }
 
@@ -36,10 +50,11 @@ class MediaHandler extends EventEmitter {
   close() {
     debug("close()");
     this._closed = true;
+    this.emit("close");
   }
 
-  async sendMedia(track: MediaStreamTrack) {
-    debug("sendMedia()");
+  async sendTrack(track: MediaStreamTrack) {
+    debug("sendTrack()");
 
     if (!(track instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
@@ -49,6 +64,7 @@ class MediaHandler extends EventEmitter {
       direction: "sendonly",
       streams: [this._stream]
     });
+
     await this._startNegotiation();
 
     const mid = String(transceiver.mid);
@@ -61,6 +77,7 @@ class MediaHandler extends EventEmitter {
 
   private async _startNegotiation() {
     debug("_startNegotiation()");
+
     const offer = await this._pc.createOffer();
     await this._pc.setLocalDescription(offer);
     debug(offer.sdp);
@@ -95,16 +112,13 @@ class MediaHandler extends EventEmitter {
   }
 
   private async _handleMessageEvent(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any,
+    message: SignalingOfferPayload,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolve: (res: any) => void,
     reject: (err: Error) => void
   ) {
     try {
-      const answer = await this._handleNegotiation(
-        message as RTCSessionDescriptionInit
-      );
+      const answer = await this._handleNegotiation(message);
       resolve(answer);
     } catch (err) {
       return reject(err);
@@ -117,14 +131,13 @@ class MediaHandler extends EventEmitter {
     }
 
     if (transceiver.currentDirection === "recvonly") {
-      this.emit("media", transceiver.receiver.track);
+      this.emit("track", transceiver.receiver.track);
     }
-    // else inactivated transceiver
+    // else transceiver inactivated
   }
 
   private _handleSenderEvent(mid: string, sender: MediaSender) {
     sender.on("@replace", track => {
-      debug("sender.replace()");
       const transceiver = this._transceivers.get(mid);
       // must not be happend
       if (!transceiver) {
@@ -137,7 +150,6 @@ class MediaHandler extends EventEmitter {
     sender.on(
       "@stop",
       async (resolve: () => void, reject: (err: Error) => void) => {
-        debug("sender.stop()");
         const transceiver = this._transceivers.get(mid);
         // must not be happend
         if (!transceiver) {
