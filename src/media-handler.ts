@@ -9,7 +9,6 @@ const debug = _debug("simple-p2p:media-handler");
 /**
  * Events
  * @fires MediaHandler#track
- * @fires MediaHandler#close
  */
 class MediaHandler extends EventEmitter {
   _closed: boolean;
@@ -34,6 +33,7 @@ class MediaHandler extends EventEmitter {
       resolve: (res?: any) => void,
       reject: (err: Error) => void
     ) => {
+      if (this._closed) return;
       if (message.type === "datachannel") return;
       await this._handleMessageEvent(
         message as SignalingOfferPayload,
@@ -50,7 +50,6 @@ class MediaHandler extends EventEmitter {
   close() {
     debug("close()");
     this._closed = true;
-    this.emit("close");
   }
 
   async sendTrack(track: MediaStreamTrack) {
@@ -148,7 +147,7 @@ class MediaHandler extends EventEmitter {
     });
 
     sender.on(
-      "@stop",
+      "@close",
       async (resolve: () => void, reject: (err: Error) => void) => {
         const transceiver = this._transceivers.get(mid);
         // must not be happend

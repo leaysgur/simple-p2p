@@ -8,7 +8,6 @@ const debug = _debug("simple-p2p:data-handler");
 /**
  * Events
  * @fires DataHandler#channel
- * @fires DataHandler#close
  */
 class DataHandler extends EventEmitter {
   _closed: boolean;
@@ -31,6 +30,7 @@ class DataHandler extends EventEmitter {
       resolve: (res?: any) => void,
       reject: (err: Error) => void
     ) => {
+      if (this._closed) return;
       if (message.type !== "datachannel") return;
       await this._handleMessageEvent(
         message as SignalingDataChannelPayload,
@@ -47,11 +47,12 @@ class DataHandler extends EventEmitter {
   close() {
     debug("close()");
     this._closed = true;
-    this.emit("close");
   }
 
   async createChannel(label: string = "", dcInit: RTCDataChannelInit = {}) {
     debug("createChannel()");
+
+    if (this._closed) throw new Error("DataHandler already closed!");
 
     Object.assign(dcInit, {
       negotiated: true,

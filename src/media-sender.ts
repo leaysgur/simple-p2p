@@ -4,28 +4,32 @@ import EventEmitter from "eventemitter3";
 const debug = _debug("simple-p2p:sender");
 
 class Sender extends EventEmitter {
-  _stopped: boolean;
+  _closed: boolean;
 
   constructor() {
     super();
 
-    this._stopped = false;
+    this._closed = false;
   }
 
   replace(track: MediaStreamTrack) {
     debug("sendMedia()");
+
     if (!(track instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
-    if (this._stopped) throw new Error("Already stopped sender!");
+    if (this._closed) throw new Error("Already closed sender!");
 
     this.emit("@replace", track);
   }
 
-  async stop() {
-    debug("stop()");
-    this._stopped = true;
+  async close() {
+    debug("close()");
+
+    if (this._closed) throw new Error("Already closed sender!");
+
+    this._closed = true;
     return new Promise((resolve, reject) => {
-      this.emit("@stop", resolve, reject);
+      this.emit("@close", resolve, reject);
     });
   }
 }
