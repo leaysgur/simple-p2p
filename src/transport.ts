@@ -74,6 +74,10 @@ class Transport extends EventEmitter {
     this._dataHandler = new DataHandler(pc, this._signaling);
   }
 
+  get closed() {
+    return this._closed;
+  }
+
   get connectionState() {
     return this._connectionState;
   }
@@ -89,10 +93,11 @@ class Transport extends EventEmitter {
     debug("close()");
 
     this._closed = true;
+    this._connectionState = "closed";
+    this._pc.close();
     this._pc.removeEventListener("icecandidate", this, false);
     this._pc.removeEventListener("iceconnectionstatechange", this, false);
     this._pc.removeEventListener("connectionstatechange", this, false);
-    this._pc.close();
     this.emit("close");
   }
 
