@@ -58,8 +58,6 @@ class Transport extends EventEmitter {
     this._signaling.on("open", () => {
       debug("signaling open");
       this.emit("open");
-      this._mediaHandler.emit("open");
-      this._dataHandler.emit("open");
     });
     this._signaling.on("close", () => {
       debug("signaling close");

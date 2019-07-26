@@ -1,9 +1,15 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
+import { SignalingPayload, SignalingDataChannelPayload } from "./types";
 
 const debug = _debug("simple-p2p:data-handler");
 
+/**
+ * Events
+ * @fires DataHandler#channel
+ * @fires DataHandler#close
+ */
 class DataHandler extends EventEmitter {
   _closed: boolean;
   _dataChannelId: number;
@@ -19,10 +25,18 @@ class DataHandler extends EventEmitter {
     this._pc = pc;
     this._signaling = signaling;
 
-    // TODO: typings
-    this._signaling.on("message", async (data, resolve, reject) => {
+    this._signaling.on("message", async (
+      data: SignalingPayload,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      resolve: (res?: any) => void,
+      reject: (err: Error) => void
+    ) => {
       if (data.type !== "datachannel") return;
-      await this._handleMessageEvent(data, resolve, reject);
+      await this._handleMessageEvent(
+        data as SignalingDataChannelPayload,
+        resolve,
+        reject
+      );
     });
   }
 
@@ -33,32 +47,38 @@ class DataHandler extends EventEmitter {
   close() {
     debug("close()");
     this._closed = true;
+    this.emit("close");
   }
 
-  async createDataChannel(label: string = "", dcInit: RTCDataChannelInit = {}) {
-    debug("createDataChannel()");
+  async createChannel(label: string = "", dcInit: RTCDataChannelInit = {}) {
+    debug("createChannel()");
+
     Object.assign(dcInit, {
       negotiated: true,
       id: this._dataChannelId
     });
+    debug(label, dcInit);
 
     const dc = this._pc.createDataChannel(label, dcInit);
     this._dataChannelId++;
 
-    // TODO: close if reject
-    await this._signaling.send({
-      type: "datachannel",
-      data: { label, dcInit }
-    });
+    try {
+      await this._signaling.send({
+        type: "datachannel",
+        data: { label, dcInit }
+      });
+    } catch (err) {
+      debug("remote#createDataChannel() failed", err);
+      dc.close();
+      throw new Error("Failed to create remote data channel!");
+    }
 
     return dc;
   }
 
   private async _handleMessageEvent(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolve: (res: any) => void,
+    message: SignalingDataChannelPayload,
+    resolve: () => void,
     reject: (err: Error) => void
   ) {
     const { label, dcInit } = message.data;
@@ -68,12 +88,12 @@ class DataHandler extends EventEmitter {
       dc = this._pc.createDataChannel(label, dcInit);
       this._dataChannelId++;
 
-      resolve(null);
+      resolve();
     } catch (err) {
       return reject(err);
     }
 
-    this.emit("data", dc);
+    this.emit("channel", dc);
   }
 }
 
