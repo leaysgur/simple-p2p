@@ -52,25 +52,25 @@ describe("simple-p2p", () => {
     const [aTrack] = stream.getAudioTracks();
 
     let m2count = 0;
-    m2.on("media", t1 => {
+    m2.on("track", t1 => {
       console.warn(t1);
       m2count++;
     });
-    await m1.sendMedia(vTrack).catch(console.error);
+    await m1.sendTrack(vTrack).catch(console.error);
 
     await new Promise(r => setTimeout(r, 1000 * 3));
 
-    await m1.sendMedia(aTrack).catch(console.error);
+    await m1.sendTrack(aTrack).catch(console.error);
 
     await new Promise(r => setTimeout(r, 1000 * 3));
 
     expect(m2count).toBe(2);
 
-    m1.on("media", t2 => {
+    m1.on("track", t2 => {
       expect(t2.kind).toBe("audio");
       done();
     });
-    await m2.sendMedia(aTrack.clone()).catch(console.error);
+    await m2.sendTrack(aTrack.clone()).catch(console.error);
   });
 
   it("should send data", async done => {
