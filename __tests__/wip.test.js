@@ -14,6 +14,12 @@ describe("simple-p2p", () => {
 
     await t1.startNegotiation().catch(console.error);
 
+    await Promise.all([
+      new Promise(r => t1.once("open", r)),
+      new Promise(r => t2.once("open", r))
+    ]);
+
+    // TODO: check connState?
     // await new Promise(r => setTimeout(r, 2000));
     // await t2.restartIce().catch(console.error);
 
@@ -21,10 +27,6 @@ describe("simple-p2p", () => {
     // t2.close();
     // await new Promise(r => setTimeout(r, 1000 * 30));
 
-    await Promise.all([
-      new Promise(r => t1.once("open", r)),
-      new Promise(r => t2.once("open", r))
-    ]);
     done();
   });
 
@@ -34,13 +36,13 @@ describe("simple-p2p", () => {
     t1.on("negotiation", p => t2.handleNegotiation(p).catch(console.error));
     t2.on("negotiation", p => t1.handleNegotiation(p).catch(console.error));
     await t1.startNegotiation().catch(console.error);
+    await Promise.all([
+      new Promise(r => t1.once("open", r)),
+      new Promise(r => t2.once("open", r))
+    ]);
+
     const m1 = t1.mediaHandler;
     const m2 = t2.mediaHandler;
-
-    await Promise.all([
-      new Promise(r => m1.once("open", r)),
-      new Promise(r => m2.once("open", r))
-    ]);
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
@@ -77,29 +79,29 @@ describe("simple-p2p", () => {
     t1.on("negotiation", p => t2.handleNegotiation(p).catch(console.error));
     t2.on("negotiation", p => t1.handleNegotiation(p).catch(console.error));
     await t1.startNegotiation().catch(console.error);
+    await Promise.all([
+      new Promise(r => t1.once("open", r)),
+      new Promise(r => t2.once("open", r))
+    ]);
+
     const d1 = t1.dataHandler;
     const d2 = t2.dataHandler;
 
-    await Promise.all([
-      new Promise(r => d1.once("open", r)),
-      new Promise(r => d2.once("open", r))
-    ]);
-
-    d2.on("data", c2 => {
+    d2.on("channel", c2 => {
       console.warn(c2);
     });
-    const c1 = await d1.createDataChannel().catch(console.error);
+    const c1 = await d1.createChannel().catch(console.error);
     console.warn(c1);
 
     await new Promise(r => setTimeout(r, 1000 * 3));
 
-    d1.on("data", c1 => {
+    d1.on("channel", c1 => {
       console.warn(c1);
       expect(c1.ordered).toBeFalsy();
       done();
     });
     const c2 = await d2
-      .createDataChannel("foo", { ordered: false })
+      .createChannel("foo", { ordered: false })
       .catch(console.error);
     console.warn(c2);
   });
