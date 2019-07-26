@@ -26,14 +26,14 @@ class DataHandler extends EventEmitter {
     this._signaling = signaling;
 
     this._signaling.on("message", async (
-      data: SignalingPayload,
+      message: SignalingPayload,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       resolve: (res?: any) => void,
       reject: (err: Error) => void
     ) => {
-      if (data.type !== "datachannel") return;
+      if (message.type !== "datachannel") return;
       await this._handleMessageEvent(
-        data as SignalingDataChannelPayload,
+        message as SignalingDataChannelPayload,
         resolve,
         reject
       );
