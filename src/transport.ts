@@ -23,7 +23,16 @@ type ConnectionState =
   | "failed"
   | "closed";
 
+/**
+ * Events
+ * @fires Transport#open
+ * @fires Transport#negotiation
+ * @fires Transport#connectionStateChange
+ * @fires Transport#close
+ * @fires Transport#error
+ */
 class Transport extends EventEmitter {
+  _closed: boolean;
   _connectionState: ConnectionState;
   _pc: RTCPeerConnection;
   _signaling: PromisedDataChannel;
@@ -33,6 +42,7 @@ class Transport extends EventEmitter {
   constructor(pc: RTCPeerConnection) {
     super();
 
+    this._closed = false;
     this._connectionState = "new";
 
     this._pc = pc;
@@ -41,19 +51,24 @@ class Transport extends EventEmitter {
     // only Chrome has this event
     this._pc.addEventListener("connectionstatechange", this, false);
 
+    // use this data channel for signaling
     this._signaling = promised(
       pc.createDataChannel("signaling", { negotiated: true, id: 0 })
     );
     this._signaling.on("open", () => {
+      debug("signaling open");
       this.emit("open");
       this._mediaHandler.emit("open");
       this._dataHandler.emit("open");
     });
     this._signaling.on("close", () => {
+      debug("signaling close");
       this._mediaHandler.close();
       this._dataHandler.close();
+      this.close();
     });
     this._signaling.on("error", err => {
+      debug("signaling error", err);
       this.emit("error", err);
     });
 
@@ -74,10 +89,13 @@ class Transport extends EventEmitter {
 
   close() {
     debug("close()");
+
+    this._closed = true;
     this._pc.removeEventListener("icecandidate", this, false);
     this._pc.removeEventListener("iceconnectionstatechange", this, false);
     this._pc.removeEventListener("connectionstatechange", this, false);
     this._pc.close();
+    this.emit("close");
   }
 
   handleEvent(ev: Event) {
@@ -93,6 +111,8 @@ class Transport extends EventEmitter {
 
   async startNegotiation(iceRestart = false) {
     debug("startNegotiation()");
+    if (this._closed) throw new Error("Transport closed!");
+
     const offer = await this._pc.createOffer({ iceRestart });
     await this._pc.setLocalDescription(offer);
 
@@ -103,6 +123,8 @@ class Transport extends EventEmitter {
 
   async handleNegotiation(payload: NegotiaionPayload) {
     debug("handleNegotiation()");
+    if (this._closed) throw new Error("Transport closed!");
+
     switch (payload.type) {
       case "candidate":
         return await this._handleCandidate(payload.data);
@@ -117,7 +139,7 @@ class Transport extends EventEmitter {
 
   async restartIce() {
     debug("restartIce()");
-    return this.startNegotiation(true);
+    await this.startNegotiation(true);
   }
 
   private async _handleOffer(offer: RTCSessionDescription) {
@@ -184,6 +206,7 @@ class Transport extends EventEmitter {
     }[this._pc.iceConnectionState] || this._connectionState) as ConnectionState;
 
     if (this._connectionState === newState) return;
+
     this._connectionState = newState;
     this.emit("connectionStateChange", this._connectionState);
   }
@@ -202,6 +225,7 @@ class Transport extends EventEmitter {
     }[this._pc.connectionState] || this._connectionState) as ConnectionState;
 
     if (this._connectionState === newState) return;
+
     this._connectionState = newState;
     this.emit("connectionStateChange", this._connectionState);
   }
