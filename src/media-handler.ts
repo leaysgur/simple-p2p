@@ -64,10 +64,21 @@ class MediaHandler extends EventEmitter {
       streams: [this._stream]
     });
 
-    await this._startNegotiation();
-
     const mid = String(transceiver.mid);
     this._transceivers.set(mid, transceiver);
+
+    try {
+      await this._startNegotiation();
+    } catch (err) {
+      debug("negotiation failed", err);
+      // dispose transceiver...
+      transceiver.sender.replaceTrack(null);
+      this._pc.removeTrack(transceiver.sender);
+      // TODO: make whole m-section inactive
+      transceiver.direction = "inactive";
+
+      throw new Error("Remote handler failed to receive track!");
+    }
 
     const sender = new MediaSender();
     this._handleSenderEvent(mid, sender);
@@ -77,14 +88,31 @@ class MediaHandler extends EventEmitter {
   private async _startNegotiation() {
     debug("_startNegotiation()");
 
-    const offer = await this._pc.createOffer();
-    await this._pc.setLocalDescription(offer);
-    debug(offer.sdp);
+    await this._pc
+      .createOffer()
+      .then(offer => this._pc.setLocalDescription(offer));
 
-    // TODO: rollback if reject
-    const answer: RTCSessionDescriptionInit = await this._signaling.send(offer);
-    debug(answer.sdp);
-    await this._pc.setRemoteDescription(answer);
+    // must not be happend
+    if (this._pc.localDescription === null) {
+      throw new Error("Can't generate offer SDP!");
+    }
+
+    debug("send offer");
+    debug(this._pc.localDescription.sdp);
+
+    try {
+      const answer: RTCSessionDescriptionInit = await this._signaling.send(
+        this._pc.localDescription
+      );
+
+      debug("recv answer");
+      debug(answer.sdp);
+      await this._pc.setRemoteDescription(answer);
+    } catch (err) {
+      // answer not responded
+      debug("can not get answer back", err);
+      throw err;
+    }
   }
   private async _handleNegotiation(
     offer: RTCSessionDescriptionInit
@@ -92,7 +120,6 @@ class MediaHandler extends EventEmitter {
     debug("_handleNegotiation()");
     debug(offer.sdp);
 
-    // TODO: rollback if fail
     await Promise.all([
       this._pc.setRemoteDescription(offer),
       this._pc
@@ -120,6 +147,8 @@ class MediaHandler extends EventEmitter {
       const answer = await this._handleNegotiation(message);
       resolve(answer);
     } catch (err) {
+      debug("sRD failed", err);
+      // sRD failed = can not send back answer
       return reject(err);
     }
 
@@ -159,6 +188,7 @@ class MediaHandler extends EventEmitter {
         this._pc.removeTrack(transceiver.sender);
         // TODO: make whole m-section inactive
         transceiver.direction = "inactive";
+
         await this._startNegotiation()
           .then(resolve)
           .catch(reject);

@@ -111,12 +111,21 @@ class Transport extends EventEmitter {
     debug("startNegotiation()");
     if (this._closed) throw new Error("Transport closed!");
 
-    const offer = await this._pc.createOffer({ iceRestart });
-    await this._pc.setLocalDescription(offer);
+    await this._pc
+      .createOffer({ iceRestart })
+      .then(offer => this._pc.setLocalDescription(offer));
+
+    // must not be happend
+    if (this._pc.localDescription === null) {
+      throw new Error("Can't generate offer SDP!");
+    }
 
     debug("emit offer SDP");
-    debug(offer.sdp);
-    this.emit("negotiation", { type: "offer", data: offer });
+    debug(this._pc.localDescription.sdp);
+    this.emit("negotiation", {
+      type: "offer",
+      data: this._pc.localDescription
+    });
   }
 
   async handleNegotiation(payload: NegotiaionPayload) {
