@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "tsc -p .",
+    "build:watch": "tsc -p . --watch",
     "lint": "eslint . --ext=js,ts && tsc -p . --noEmit",
     "test": "karma start",
     "test:watch": "karma start --no-single-run --auto-watch --no-browsers"
