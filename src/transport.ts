@@ -93,11 +93,13 @@ class Transport extends EventEmitter {
     debug("close()");
 
     this._closed = true;
-    this._connectionState = "closed";
+    this._updateConnectionState("closed");
+
     this._pc.close();
     this._pc.removeEventListener("icecandidate", this, false);
     this._pc.removeEventListener("iceconnectionstatechange", this, false);
     this._pc.removeEventListener("connectionstatechange", this, false);
+
     this.emit("close");
   }
 
@@ -135,7 +137,10 @@ class Transport extends EventEmitter {
 
   async handleNegotiation(payload: NegotiaionPayload) {
     debug("handleNegotiation()");
-    if (this._closed) throw new Error("Transport closed!");
+    if (this._closed) {
+      debug("transport already closed, ignore");
+      return;
+    }
 
     switch (payload.type) {
       case "candidate":
@@ -217,10 +222,7 @@ class Transport extends EventEmitter {
       closed: "closed"
     }[this._pc.iceConnectionState] || this._connectionState) as ConnectionState;
 
-    if (this._connectionState === newState) return;
-
-    this._connectionState = newState;
-    this.emit("connectionStateChange", this._connectionState);
+    this._updateConnectionState(newState);
   }
 
   private _handleConnectionStateChangeEvent() {
@@ -236,6 +238,10 @@ class Transport extends EventEmitter {
       closed: "closed"
     }[this._pc.connectionState] || this._connectionState) as ConnectionState;
 
+    this._updateConnectionState(newState);
+  }
+
+  private _updateConnectionState(newState: ConnectionState) {
     if (this._connectionState === newState) return;
 
     this._connectionState = newState;
