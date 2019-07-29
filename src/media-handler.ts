@@ -91,9 +91,8 @@ class MediaHandler extends EventEmitter {
 
     await this._pc.setLocalDescription(offer);
     // must not be happend
-    if (this._pc.localDescription === null) {
+    if (this._pc.localDescription === null)
       throw new Error("Can't generate offer SDP!");
-    }
 
     debug("send offer");
     debug(this._pc.localDescription.sdp);
@@ -126,9 +125,8 @@ class MediaHandler extends EventEmitter {
     ]);
 
     // must not be happend
-    if (this._pc.localDescription === null) {
+    if (this._pc.localDescription === null)
       throw new Error("Can't generate answer SDP!");
-    }
 
     debug("emit answer SDP");
     debug(this._pc.localDescription.sdp);
@@ -152,9 +150,7 @@ class MediaHandler extends EventEmitter {
 
     const transceiver = this._pc.getTransceivers().pop();
     // must not be happend
-    if (!transceiver) {
-      throw new Error("Missing transceiver!");
-    }
+    if (!transceiver) throw new Error("Missing transceiver!");
 
     if (transceiver.currentDirection === "recvonly") {
       this.emit("track", transceiver.receiver.track);
@@ -166,9 +162,7 @@ class MediaHandler extends EventEmitter {
     sender.on("@replace", track => {
       const transceiver = this._transceivers.get(mid);
       // must not be happend
-      if (!transceiver) {
-        throw new Error("Missing transceiver!");
-      }
+      if (!transceiver) throw new Error("Missing transceiver!");
 
       transceiver.sender.replaceTrack(track);
     });
@@ -178,9 +172,7 @@ class MediaHandler extends EventEmitter {
       async (resolve: () => void, reject: (err: Error) => void) => {
         const transceiver = this._transceivers.get(mid);
         // must not be happend
-        if (!transceiver) {
-          throw new Error("Missing transceiver!");
-        }
+        if (!transceiver) throw new Error("Missing transceiver!");
 
         transceiver.sender.replaceTrack(null);
         this._pc.removeTrack(transceiver.sender);

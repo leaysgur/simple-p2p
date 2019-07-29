@@ -123,9 +123,8 @@ class Transport extends EventEmitter {
       .then(offer => this._pc.setLocalDescription(offer));
 
     // must not be happend
-    if (this._pc.localDescription === null) {
+    if (this._pc.localDescription === null)
       throw new Error("Can't generate offer SDP!");
-    }
 
     debug("emit offer SDP");
     debug(this._pc.localDescription.sdp);
@@ -161,9 +160,8 @@ class Transport extends EventEmitter {
 
   private async _handleOffer(offer: RTCSessionDescription) {
     debug("handle offer SDP");
-    if (offer.type !== "offer") {
+    if (offer.type !== "offer")
       throw new Error("Received SDP is not an offer!");
-    }
 
     debug(offer.sdp);
     await Promise.all([
@@ -174,9 +172,8 @@ class Transport extends EventEmitter {
     ]);
 
     // must not be happend
-    if (this._pc.localDescription === null) {
+    if (this._pc.localDescription === null)
       throw new Error("Can't generate answer SDP!");
-    }
 
     debug("emit answer SDP");
     debug(this._pc.localDescription.sdp);
@@ -188,9 +185,8 @@ class Transport extends EventEmitter {
 
   private async _handleAnswer(answer: RTCSessionDescription) {
     debug("handle answer SDP");
-    if (answer.type !== "answer") {
+    if (answer.type !== "answer")
       throw new Error("Received SDP is not an answer!");
-    }
 
     debug(answer.sdp);
     await this._pc.setRemoteDescription(answer);
