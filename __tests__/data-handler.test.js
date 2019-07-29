@@ -52,20 +52,24 @@ describe("DataHandler#close()", () => {
 
 describe("DataHandler#createChannel()", () => {
   it("should create channel", async done => {
-    d2.once("channel", c2 => {
+    const channels = [];
+    d2.on("channel", c2 => {
       expect(c2 instanceof RTCDataChannel).toBeTruthy();
-      done();
+      channels.push(c2);
     });
 
     const c1 = await d1.createChannel().catch(done.fail);
     expect(c1 instanceof RTCDataChannel).toBeTruthy();
+    expect(channels.length).toBe(1);
+    done();
   });
 
   it("should specify label and dcInit", async done => {
-    d2.once("channel", c2 => {
+    const channels = [];
+    d2.on("channel", c2 => {
       expect(c2.label).toBe("hello");
       expect(c2.ordered).toBeFalsy();
-      done();
+      channels.push(c2);
     });
 
     const c1 = await d1
@@ -73,5 +77,7 @@ describe("DataHandler#createChannel()", () => {
       .catch(done.fail);
     expect(c1.label).toBe("hello");
     expect(c1.ordered).toBeFalsy();
+    expect(channels.length).toBe(1);
+    done();
   });
 });
