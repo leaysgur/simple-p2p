@@ -159,12 +159,21 @@ class MediaHandler extends EventEmitter {
   }
 
   private _handleSenderEvent(mid: string, sender: MediaSender) {
-    sender.on("@replace", track => {
+    sender.on("@replace", (track, resolve, reject) => {
       const transceiver = this._transceivers.get(mid);
       // must not be happend
-      if (!transceiver) throw new Error("Missing transceiver!");
+      if (!transceiver) return reject(new Error("Missing transceiver!"));
+
+      if (transceiver.sender.track && transceiver.sender.track === track)
+        return reject(new Error("Do not need to replace the same track!"));
+      if (
+        transceiver.sender.track &&
+        transceiver.sender.track.kind !== track.kind
+      )
+        return reject(new Error("Can not replace different kind of track!"));
 
       transceiver.sender.replaceTrack(track);
+      resolve();
     });
 
     sender.on(

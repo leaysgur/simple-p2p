@@ -16,14 +16,16 @@ class Sender extends EventEmitter {
     return this._closed;
   }
 
-  replace(track: MediaStreamTrack) {
+  async replace(track: MediaStreamTrack) {
     debug("sendMedia()");
 
     if (!(track instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
     if (this._closed) throw new Error("Already closed sender!");
 
-    this.emit("@replace", track);
+    return new Promise((resolve, reject) => {
+      this.emit("@replace", track, resolve, reject);
+    });
   }
 
   async close() {
