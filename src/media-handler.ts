@@ -67,8 +67,10 @@ class MediaHandler extends EventEmitter {
     const mid = String(transceiver.mid);
     this._transceivers.set(mid, transceiver);
 
+    const offer = await this._pc.createOffer();
+
     try {
-      await this._startNegotiation();
+      await this._startNegotiation(offer);
     } catch (err) {
       debug("negotiation failed", err);
       // dispose transceiver...
@@ -84,13 +86,10 @@ class MediaHandler extends EventEmitter {
     return sender;
   }
 
-  private async _startNegotiation() {
+  private async _startNegotiation(offer: RTCSessionDescriptionInit) {
     debug("_startNegotiation()");
 
-    await this._pc
-      .createOffer()
-      .then(offer => this._pc.setLocalDescription(offer));
-
+    await this._pc.setLocalDescription(offer);
     // must not be happend
     if (this._pc.localDescription === null) {
       throw new Error("Can't generate offer SDP!");
@@ -187,7 +186,8 @@ class MediaHandler extends EventEmitter {
         this._pc.removeTrack(transceiver.sender);
         transceiver.direction = "inactive";
 
-        await this._startNegotiation()
+        const offer = await this._pc.createOffer();
+        await this._startNegotiation(offer)
           .then(resolve)
           .catch(reject);
       }
