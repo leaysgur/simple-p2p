@@ -34,7 +34,7 @@ class MediaHandler extends EventEmitter {
       reject: (err: Error) => void
     ) => {
       if (this._closed) return;
-      if (message.type === "datachannel") return;
+      if (message.type !== "mediachannel") return;
       await this._handleMessageEvent(
         message as SignalingOfferPayload,
         resolve,
@@ -98,9 +98,10 @@ class MediaHandler extends EventEmitter {
     debug(this._pc.localDescription.sdp);
 
     try {
-      const answer: RTCSessionDescriptionInit = await this._signaling.send(
-        this._pc.localDescription
-      );
+      const answer: RTCSessionDescriptionInit = await this._signaling.send({
+        type: "mediachannel",
+        data: this._pc.localDescription
+      });
 
       debug("recv answer");
       debug(answer.sdp);
@@ -140,7 +141,7 @@ class MediaHandler extends EventEmitter {
     reject: (err: Error) => void
   ) {
     try {
-      await this._handleNegotiation(message);
+      await this._handleNegotiation(message.data);
     } catch (err) {
       debug("sRD failed", err);
       // sRD failed = can not send back answer

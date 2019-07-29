@@ -5,8 +5,9 @@ export interface SignalingDataChannelPayload {
     dcInit: RTCDataChannelInit;
   };
 }
-export interface SignalingOfferPayload extends RTCSessionDescriptionInit {
-  type: "offer";
+export interface SignalingOfferPayload {
+  type: "mediachannel";
+  data: RTCSessionDescription;
 }
 
 export type SignalingPayload =
