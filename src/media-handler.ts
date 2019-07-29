@@ -140,8 +140,7 @@ class MediaHandler extends EventEmitter {
     reject: (err: Error) => void
   ) {
     try {
-      const answer = await this._handleNegotiation(message);
-      resolve(answer);
+      await this._handleNegotiation(message);
     } catch (err) {
       debug("sRD failed", err);
       // sRD failed = can not send back answer
@@ -150,12 +149,14 @@ class MediaHandler extends EventEmitter {
 
     const transceiver = this._pc.getTransceivers().pop();
     // must not be happend
-    if (!transceiver) throw new Error("Missing transceiver!");
+    if (!transceiver) return reject(new Error("Missing transceiver!"));
 
     if (transceiver.currentDirection === "recvonly") {
       this.emit("track", transceiver.receiver.track);
     }
     // else transceiver inactivated
+
+    resolve(this._pc.localDescription);
   }
 
   private _handleSenderEvent(mid: string, sender: MediaSender) {
@@ -181,7 +182,7 @@ class MediaHandler extends EventEmitter {
       async (resolve: () => void, reject: (err: Error) => void) => {
         const transceiver = this._transceivers.get(mid);
         // must not be happend
-        if (!transceiver) throw new Error("Missing transceiver!");
+        if (!transceiver) return reject(new Error("Missing transceiver!"));
 
         transceiver.sender.replaceTrack(null);
         this._pc.removeTrack(transceiver.sender);
