@@ -12,6 +12,10 @@ class Sender extends EventEmitter {
     this._closed = false;
   }
 
+  get closed() {
+    return this._closed;
+  }
+
   replace(track: MediaStreamTrack) {
     debug("sendMedia()");
 
