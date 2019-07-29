@@ -1,7 +1,7 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
-import { SignalingPayload, SignalingOfferPayload } from "./types";
+import { SignalingPayload, SignalingOfferPayload } from "./utils/types";
 import MediaSender from "./media-sender";
 import MediaReceiver from "./media-receiver";
 

@@ -1,7 +1,7 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
-import { SignalingPayload, SignalingDataChannelPayload } from "./types";
+import { SignalingPayload, SignalingDataChannelPayload } from "./utils/types";
 
 const debug = _debug("simple-p2p:data-handler");
 
