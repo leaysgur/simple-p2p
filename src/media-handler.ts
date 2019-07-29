@@ -3,6 +3,7 @@ import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
 import { SignalingPayload, SignalingOfferPayload } from "./types";
 import MediaSender from "./media-sender";
+import MediaReceiver from "./media-receiver";
 
 const debug = _debug("simple-p2p:media-handler");
 
@@ -122,6 +123,7 @@ class MediaHandler extends EventEmitter {
   ) {
     debug("_handleMessageEvent()");
     const { offer } = message.data;
+    debug("handle offer SDP");
     debug(offer.sdp);
 
     try {
@@ -146,7 +148,8 @@ class MediaHandler extends EventEmitter {
     if (!transceiver) return reject(new Error("Missing transceiver!"));
 
     if (transceiver.currentDirection === "recvonly") {
-      this.emit("track", transceiver.receiver.track);
+      const receiver = new MediaReceiver(transceiver.receiver.track);
+      this.emit("receiver", receiver);
     }
     // else transceiver inactivated
 
