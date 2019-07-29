@@ -100,7 +100,7 @@ class MediaHandler extends EventEmitter {
     try {
       const answer: RTCSessionDescriptionInit = await this._signaling.send({
         type: "mediachannel",
-        data: this._pc.localDescription
+        data: { offer: this._pc.localDescription }
       });
 
       debug("recv answer");
@@ -112,27 +112,6 @@ class MediaHandler extends EventEmitter {
       throw err;
     }
   }
-  private async _handleNegotiation(
-    offer: RTCSessionDescriptionInit
-  ): Promise<RTCSessionDescription> {
-    debug("_handleNegotiation()");
-    debug(offer.sdp);
-
-    await Promise.all([
-      this._pc.setRemoteDescription(offer),
-      this._pc
-        .createAnswer()
-        .then(answer => this._pc.setLocalDescription(answer))
-    ]);
-
-    // must not be happend
-    if (this._pc.localDescription === null)
-      throw new Error("Can't generate answer SDP!");
-
-    debug("emit answer SDP");
-    debug(this._pc.localDescription.sdp);
-    return this._pc.localDescription;
-  }
 
   private async _handleMessageEvent(
     message: SignalingOfferPayload,
@@ -140,13 +119,26 @@ class MediaHandler extends EventEmitter {
     resolve: (res: any) => void,
     reject: (err: Error) => void
   ) {
+    debug("_handleMessageEvent()");
+    const { offer } = message.data;
+    debug(offer.sdp);
+
     try {
-      await this._handleNegotiation(message.data);
+      await Promise.all([
+        this._pc.setRemoteDescription(offer),
+        this._pc
+          .createAnswer()
+          .then(answer => this._pc.setLocalDescription(answer))
+      ]);
     } catch (err) {
       debug("sRD failed", err);
       // sRD failed = can not send back answer
       return reject(err);
     }
+
+    // must not be happend
+    if (this._pc.localDescription === null)
+      return reject(new Error("Can't generate answer SDP!"));
 
     const transceiver = this._pc.getTransceivers().pop();
     // must not be happend
@@ -157,6 +149,8 @@ class MediaHandler extends EventEmitter {
     }
     // else transceiver inactivated
 
+    debug("emit answer SDP");
+    debug(this._pc.localDescription.sdp);
     resolve(this._pc.localDescription);
   }
 

@@ -7,7 +7,9 @@ export interface SignalingDataChannelPayload {
 }
 export interface SignalingOfferPayload {
   type: "mediachannel";
-  data: RTCSessionDescription;
+  data: {
+    offer: RTCSessionDescription;
+  };
 }
 
 export type SignalingPayload =
