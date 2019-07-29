@@ -27,20 +27,22 @@ class MediaHandler extends EventEmitter {
     this._pc = pc;
     this._signaling = signaling;
 
-    this._signaling.on("message", async (
-      message: SignalingPayload,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolve: (res?: any) => void,
-      reject: (err: Error) => void
-    ) => {
-      if (this._closed) return;
-      if (message.type !== "mediachannel") return;
-      await this._handleMessageEvent(
-        message as SignalingOfferPayload,
-        resolve,
-        reject
-      );
-    });
+    this._signaling.on(
+      "message",
+      async (
+        message: SignalingPayload,
+        resolve: (answer: RTCSessionDescription) => void,
+        reject: (err: Error) => void
+      ) => {
+        if (this._closed) return;
+        if (message.type !== "mediachannel") return;
+        await this._handleMessageEvent(
+          message as SignalingOfferPayload,
+          resolve,
+          reject
+        );
+      }
+    );
   }
 
   get closed() {
@@ -115,8 +117,7 @@ class MediaHandler extends EventEmitter {
 
   private async _handleMessageEvent(
     message: SignalingOfferPayload,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolve: (res: any) => void,
+    resolve: (res: RTCSessionDescription) => void,
     reject: (err: Error) => void
   ) {
     debug("_handleMessageEvent()");

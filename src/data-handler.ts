@@ -24,20 +24,22 @@ class DataHandler extends EventEmitter {
     this._pc = pc;
     this._signaling = signaling;
 
-    this._signaling.on("message", async (
-      message: SignalingPayload,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolve: (res?: any) => void,
-      reject: (err: Error) => void
-    ) => {
-      if (this._closed) return;
-      if (message.type !== "datachannel") return;
-      await this._handleMessageEvent(
-        message as SignalingDataChannelPayload,
-        resolve,
-        reject
-      );
-    });
+    this._signaling.on(
+      "message",
+      async (
+        message: SignalingPayload,
+        resolve: () => void,
+        reject: (err: Error) => void
+      ) => {
+        if (this._closed) return;
+        if (message.type !== "datachannel") return;
+        await this._handleMessageEvent(
+          message as SignalingDataChannelPayload,
+          resolve,
+          reject
+        );
+      }
+    );
   }
 
   get closed() {
@@ -88,13 +90,12 @@ class DataHandler extends EventEmitter {
     try {
       dc = this._pc.createDataChannel(label, dcInit);
       this._dataChannelId++;
-
-      resolve();
     } catch (err) {
       return reject(err);
     }
 
     this.emit("channel", dc);
+    resolve();
   }
 }
 
