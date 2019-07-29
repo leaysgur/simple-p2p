@@ -13,7 +13,7 @@ afterEach(() => {
   t1 = t2 = null;
 });
 
-describe("close()", () => {
+describe("Transport#close()", () => {
   it("should close", () => {
     expect(t1.closed).toBeFalsy();
     expect(t1.connectionState).toBe("new");
@@ -31,7 +31,7 @@ describe("close()", () => {
   });
 });
 
-describe("startNegotiation()", () => {
+describe("Transport#startNegotiation()", () => {
   it("should emit negotiation event(offer)", done => {
     t1.once("negotiation", msg => {
       expect(msg.type).toBe("offer");
@@ -52,7 +52,7 @@ describe("startNegotiation()", () => {
   });
 });
 
-describe("handleNegotiation()", () => {
+describe("Transport#handleNegotiation()", () => {
   it("should emit negotiation event(answer)", done => {
     t2.once("negotiation", msg => {
       expect(msg.type).toBe("answer");
@@ -87,7 +87,7 @@ describe("handleNegotiation()", () => {
   });
 });
 
-describe("events", () => {
+describe("Transport#events", () => {
   it("should emit open event", async done => {
     t1.on("negotiation", msg => t2.handleNegotiation(msg).catch(done.fail));
     t2.on("negotiation", msg => t1.handleNegotiation(msg).catch(done.fail));
@@ -132,7 +132,7 @@ describe("events", () => {
   });
 });
 
-describe("restartIce()", () => {
+describe("Transport#restartIce()", () => {
   it("should update ice entries", async done => {
     let iceEntries = null;
     t1.on("negotiation", async msg => {

@@ -26,14 +26,14 @@ afterEach(() => {
   d1 = d2 = null;
 });
 
-describe("constructor()", () => {
+describe("DataHandler#constructor()", () => {
   it("should be closed: false", () => {
     expect(d1.closed).toBeFalsy();
     expect(d2.closed).toBeFalsy();
   });
 });
 
-describe("close()", () => {
+describe("DataHandler#close()", () => {
   it("should be closed: true", () => {
     d1.close();
     expect(d1.closed).toBeTruthy();
@@ -50,7 +50,7 @@ describe("close()", () => {
   });
 });
 
-describe("createChannel()", () => {
+describe("DataHandler#createChannel()", () => {
   it("should create channel", async done => {
     d2.once("channel", c2 => {
       expect(c2 instanceof RTCDataChannel).toBeTruthy();
