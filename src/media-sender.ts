@@ -52,5 +52,16 @@ class Sender extends EventEmitter {
     });
     this._ended = true;
   }
+
+  async getStats() {
+    debug("getStats()");
+
+    if (this._ended) throw new Error("Already ended sender!");
+
+    const stats = await new Promise((resolve, reject) => {
+      this.emit("@stats", this._tidx, resolve, reject);
+    });
+    return stats;
+  }
 }
 export default Sender;

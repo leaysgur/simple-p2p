@@ -58,7 +58,7 @@ describe("MediaSender#end()", () => {
   });
 });
 
-describe("MediaHandler#replace()", () => {
+describe("MediaSender#replace()", () => {
   it("should replace track", async done => {
     const s1 = await m1.sendTrack(at1).catch(done.fail);
     await s1.replace(at1.clone()).catch(done.fail);
@@ -86,6 +86,15 @@ describe("MediaHandler#replace()", () => {
     await s1.replace(vt1).catch(err => {
       expect(err).toMatch(/kind/);
     });
+    done();
+  });
+});
+
+describe("MediaSender#getStats()", () => {
+  it("should get sender stats", async done => {
+    const s1 = await m1.sendTrack(at1).catch(done.fail);
+    const stats = await s1.getStats().catch(done.fail);
+    expect(stats instanceof RTCStatsReport).toBeTruthy();
     done();
   });
 });

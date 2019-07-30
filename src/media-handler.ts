@@ -169,6 +169,7 @@ class MediaHandler extends EventEmitter {
     if (transceiver.currentDirection === "recvonly") {
       const receiver = new MediaReceiver(transceiver.receiver.track, tidx);
       this._receivers.set(tidx, receiver);
+      this._handleReceiverEvent(receiver);
       this.emit("receiver", receiver);
     }
     if (transceiver.currentDirection === "inactive") {
@@ -239,6 +240,44 @@ class MediaHandler extends EventEmitter {
 
         const offer = await this._pc.createOffer();
         await this._startNegotiation(offer, tidx)
+          .then(resolve)
+          .catch(reject);
+      }
+    );
+
+    sender.on(
+      "@stats",
+      async (
+        tidx: number,
+        resolve: () => void,
+        reject: (err: Error) => void
+      ) => {
+        const transceiver = this._pc.getTransceivers()[tidx];
+        // must not be happend
+        if (!transceiver) return reject(new Error("Missing transceiver!"));
+
+        await transceiver.sender
+          .getStats()
+          .then(resolve)
+          .catch(reject);
+      }
+    );
+  }
+
+  private _handleReceiverEvent(receiver: MediaReceiver) {
+    receiver.on(
+      "@stats",
+      async (
+        tidx: number,
+        resolve: () => void,
+        reject: (err: Error) => void
+      ) => {
+        const transceiver = this._pc.getTransceivers()[tidx];
+        // must not be happend
+        if (!transceiver) return reject(new Error("Missing transceiver!"));
+
+        await transceiver.receiver
+          .getStats()
           .then(resolve)
           .catch(reject);
       }

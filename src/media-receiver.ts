@@ -11,14 +11,14 @@ const debug = _debug("simple-p2p:receiver");
 class Receiver extends EventEmitter {
   _ended: boolean;
   _track: MediaStreamTrack;
-  _tdix: number;
+  _tidx: number;
 
-  constructor(track: MediaStreamTrack, tdix: number) {
+  constructor(track: MediaStreamTrack, tidx: number) {
     super();
 
     this._ended = false;
     this._track = track;
-    this._tdix = tdix;
+    this._tidx = tidx;
   }
 
   get ended() {
@@ -27,6 +27,17 @@ class Receiver extends EventEmitter {
 
   get track() {
     return this._track;
+  }
+
+  async getStats() {
+    debug("getStats()");
+
+    if (this._ended) throw new Error("Already ended receiver!");
+
+    const stats = await new Promise((resolve, reject) => {
+      this.emit("@stats", this._tidx, resolve, reject);
+    });
+    return stats;
   }
 
   _endedBySender() {
