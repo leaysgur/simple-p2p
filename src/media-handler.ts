@@ -84,8 +84,8 @@ class MediaHandler extends EventEmitter {
       throw new Error("Remote handler failed to receive track!");
     }
 
-    const sender = new MediaSender(track);
-    this._handleSenderEvent(mid, sender);
+    const sender = new MediaSender(track, mid);
+    this._handleSenderEvent(sender);
     return sender;
   }
 
@@ -151,7 +151,7 @@ class MediaHandler extends EventEmitter {
     this._transceivers.set(mid, transceiver);
 
     if (transceiver.currentDirection === "recvonly") {
-      const receiver = new MediaReceiver(transceiver.receiver.track);
+      const receiver = new MediaReceiver(transceiver.receiver.track, mid);
       this.emit("receiver", receiver);
     }
     // else transceiver inactivated
@@ -161,10 +161,11 @@ class MediaHandler extends EventEmitter {
     resolve(this._pc.localDescription);
   }
 
-  private _handleSenderEvent(mid: string, sender: MediaSender) {
+  private _handleSenderEvent(sender: MediaSender) {
     sender.on(
       "@replace",
       async (
+        mid: string,
         track: MediaStreamTrack,
         resolve: () => void,
         reject: (err: Error) => void
@@ -182,7 +183,11 @@ class MediaHandler extends EventEmitter {
 
     sender.on(
       "@close",
-      async (resolve: () => void, reject: (err: Error) => void) => {
+      async (
+        mid: string,
+        resolve: () => void,
+        reject: (err: Error) => void
+      ) => {
         const transceiver = this._transceivers.get(mid);
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));

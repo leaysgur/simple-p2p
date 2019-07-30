@@ -6,12 +6,14 @@ const debug = _debug("simple-p2p:sender");
 class Sender extends EventEmitter {
   _closed: boolean;
   _track: MediaStreamTrack;
+  _mid: string;
 
-  constructor(track: MediaStreamTrack) {
+  constructor(track: MediaStreamTrack, mid: string) {
     super();
 
     this._closed = false;
     this._track = track;
+    this._mid = mid;
   }
 
   get closed() {
@@ -34,9 +36,10 @@ class Sender extends EventEmitter {
     if (this._track.kind !== newTrack.kind)
       throw new Error("Can not replace different kind of track!");
 
-    return new Promise((resolve, reject) => {
-      this.emit("@replace", newTrack, resolve, reject);
+    await new Promise((resolve, reject) => {
+      this.emit("@replace", this._mid, newTrack, resolve, reject);
     });
+    this._track = newTrack;
   }
 
   async close() {
@@ -44,10 +47,10 @@ class Sender extends EventEmitter {
 
     if (this._closed) throw new Error("Already closed sender!");
 
-    this._closed = true;
-    return new Promise((resolve, reject) => {
-      this.emit("@close", resolve, reject);
+    await new Promise((resolve, reject) => {
+      this.emit("@close", this._mid, resolve, reject);
     });
+    this._closed = true;
   }
 }
 export default Sender;
