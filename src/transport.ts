@@ -55,16 +55,8 @@ class Transport extends EventEmitter {
     this._signaling = promised(
       pc.createDataChannel("signaling", { negotiated: true, id: 0 })
     );
-    this._signaling.on("open", () => {
-      debug("signaling open");
-      this.emit("open");
-    });
-    this._signaling.on("close", () => {
-      debug("signaling close");
-      this._mediaHandler.close();
-      this._dataHandler.close();
-      this.close();
-    });
+    this._signaling.on("open", () => this.emit("open"));
+    this._signaling.on("close", () => debug("signaling close"));
     this._signaling.on("error", err => {
       debug("signaling error", err);
       this.emit("error", err);
@@ -94,6 +86,9 @@ class Transport extends EventEmitter {
 
     this._closed = true;
     this._updateConnectionState("closed");
+
+    this._mediaHandler._closeByTransport();
+    this._dataHandler._closeByTransport();
 
     this._pc.close();
     this._pc.removeEventListener("icecandidate", this, false);

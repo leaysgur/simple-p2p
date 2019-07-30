@@ -51,8 +51,8 @@ class DataHandler extends EventEmitter {
     return this._closed;
   }
 
-  close() {
-    debug("close()");
+  _closeByTransport() {
+    debug("_closeByTransport()");
     this._closed = true;
   }
 
