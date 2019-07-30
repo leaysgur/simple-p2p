@@ -41,17 +41,17 @@ describe("MediaHandler#constructor()", () => {
   });
 });
 
-describe("MediaHandler#close()", () => {
+describe("MediaHandler#closed", () => {
   it("should be closed: true", () => {
-    m1.close();
+    t1.close();
     expect(m1.closed).toBeTruthy();
 
-    m2.close();
+    t2.close();
     expect(m2.closed).toBeTruthy();
   });
 
   it("should throw after closed", async () => {
-    m1.close();
+    t1.close();
     await m1.sendTrack(at1).catch(err => {
       expect(err).toMatch(/closed/);
     });

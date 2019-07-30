@@ -28,17 +28,17 @@ describe("DataHandler#constructor()", () => {
   });
 });
 
-describe("DataHandler#close()", () => {
+describe("DataHandler#closed", () => {
   it("should be closed: true", () => {
-    d1.close();
+    t1.close();
     expect(d1.closed).toBeTruthy();
 
-    d2.close();
+    t2.close();
     expect(d2.closed).toBeTruthy();
   });
 
   it("should throw after closed", async () => {
-    d1.close();
+    t1.close();
     await d1.createChannel().catch(err => {
       expect(err).toMatch(/closed/);
     });
