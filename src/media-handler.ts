@@ -84,7 +84,7 @@ class MediaHandler extends EventEmitter {
       throw new Error("Remote handler failed to receive track!");
     }
 
-    const sender = new MediaSender();
+    const sender = new MediaSender(track);
     this._handleSenderEvent(mid, sender);
     return sender;
   }
@@ -169,14 +169,6 @@ class MediaHandler extends EventEmitter {
         const transceiver = this._transceivers.get(mid);
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
-
-        if (transceiver.sender.track && transceiver.sender.track === track)
-          return reject(new Error("Do not need to replace the same track!"));
-        if (
-          transceiver.sender.track &&
-          transceiver.sender.track.kind !== track.kind
-        )
-          return reject(new Error("Can not replace different kind of track!"));
 
         await transceiver.sender
           .replaceTrack(track)
