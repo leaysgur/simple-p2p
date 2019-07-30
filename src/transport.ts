@@ -153,6 +153,12 @@ class Transport extends EventEmitter {
     await this.startNegotiation(true);
   }
 
+  async getStats() {
+    debug("getStats()");
+    const stats = await this._pc.getStats();
+    return stats;
+  }
+
   private async _handleOffer(offer: RTCSessionDescription) {
     debug("handle offer SDP");
     if (offer.type !== "offer")

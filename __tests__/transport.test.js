@@ -189,3 +189,10 @@ describe("Transport#restartIce()", () => {
     await t1.startNegotiation().catch(done.fail);
   });
 });
+
+describe("Transport#getStats()", () => {
+  it("should get transport stats", async () => {
+    const stats = await t1.getStats();
+    expect([...stats.keys()]).toContain("RTCPeerConnection");
+  });
+});
