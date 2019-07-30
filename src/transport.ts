@@ -87,8 +87,8 @@ class Transport extends EventEmitter {
     this._closed = true;
     this._updateConnectionState("closed");
 
-    this._mediaHandler._closeByTransport();
-    this._dataHandler._closeByTransport();
+    this._mediaHandler._transportClose();
+    this._dataHandler._transportClose();
 
     this._pc.close();
     this._pc.removeEventListener("icecandidate", this, false);
