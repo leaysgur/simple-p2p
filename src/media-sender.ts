@@ -3,6 +3,12 @@ import EventEmitter from "eventemitter3";
 
 const debug = _debug("simple-p2p:sender");
 
+/**
+ * Events
+ * @fires MediaSender#@replace
+ * @fires MediaSender#@end
+ * @fires MediaSender#@stats
+ */
 class Sender extends EventEmitter {
   _ended: boolean;
   _track: MediaStreamTrack;

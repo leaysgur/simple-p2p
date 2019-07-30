@@ -7,6 +7,7 @@ const debug = _debug("simple-p2p:receiver");
  * Events
  * @fires MediaHandler#replace
  * @fires MediaHandler#end
+ * @fires MediaHandler#@stats
  */
 class Receiver extends EventEmitter {
   _ended: boolean;

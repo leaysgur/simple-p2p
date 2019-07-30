@@ -13,7 +13,7 @@ const debug = _debug("simple-p2p:media-handler");
 
 /**
  * Events
- * @fires MediaHandler#track
+ * @fires MediaHandler#receiver
  */
 class MediaHandler extends EventEmitter {
   _closed: boolean;
