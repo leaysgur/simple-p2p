@@ -25,7 +25,7 @@ class Sender extends EventEmitter {
   }
 
   async replace(newTrack: MediaStreamTrack) {
-    debug("sendMedia()");
+    debug("replace()");
 
     if (!(newTrack instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
