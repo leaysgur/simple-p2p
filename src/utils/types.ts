@@ -1,12 +1,12 @@
 export interface SignalingDataChannelPayload {
-  type: "datachannel";
+  type: "data-channel";
   data: {
     label: string;
     dcInit: RTCDataChannelInit;
   };
 }
-export interface SignalingOfferPayload {
-  type: "mediachannel";
+export interface SignalingMediaNegotiationPayload {
+  type: "media-negotiation";
   data: {
     offer: RTCSessionDescription;
     tidx: number;
@@ -15,4 +15,4 @@ export interface SignalingOfferPayload {
 
 export type SignalingPayload =
   | SignalingDataChannelPayload
-  | SignalingOfferPayload;
+  | SignalingMediaNegotiationPayload;

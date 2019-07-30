@@ -1,7 +1,10 @@
 import _debug from "debug";
 import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
-import { SignalingPayload, SignalingOfferPayload } from "./utils/types";
+import {
+  SignalingPayload,
+  SignalingMediaNegotiationPayload
+} from "./utils/types";
 import MediaSender from "./media-sender";
 import MediaReceiver from "./media-receiver";
 
@@ -37,12 +40,17 @@ class MediaHandler extends EventEmitter {
         reject: (err: Error) => void
       ) => {
         if (this._closed) return;
-        if (message.type !== "mediachannel") return;
-        await this._handleMessageEvent(
-          message as SignalingOfferPayload,
-          resolve,
-          reject
-        );
+
+        switch (message.type) {
+          case "media-negotiation": {
+            await this._handleMediaNegotiation(
+              message as SignalingMediaNegotiationPayload,
+              resolve,
+              reject
+            );
+            break;
+          }
+        }
       }
     );
   }
@@ -119,8 +127,8 @@ class MediaHandler extends EventEmitter {
     }
   }
 
-  private async _handleMessageEvent(
-    message: SignalingOfferPayload,
+  private async _handleMediaNegotiation(
+    message: SignalingMediaNegotiationPayload,
     resolve: (res: RTCSessionDescription) => void,
     reject: (err: Error) => void
   ) {

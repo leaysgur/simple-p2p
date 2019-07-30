@@ -32,12 +32,17 @@ class DataHandler extends EventEmitter {
         reject: (err: Error) => void
       ) => {
         if (this._closed) return;
-        if (message.type !== "datachannel") return;
-        await this._handleMessageEvent(
-          message as SignalingDataChannelPayload,
-          resolve,
-          reject
-        );
+
+        switch (message.type) {
+          case "data-channel": {
+            await this._handleDataChannel(
+              message as SignalingDataChannelPayload,
+              resolve,
+              reject
+            );
+            break;
+          }
+        }
       }
     );
   }
@@ -79,7 +84,7 @@ class DataHandler extends EventEmitter {
     return dc;
   }
 
-  private async _handleMessageEvent(
+  private async _handleDataChannel(
     message: SignalingDataChannelPayload,
     resolve: () => void,
     reject: (err: Error) => void
