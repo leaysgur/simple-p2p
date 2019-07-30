@@ -3,7 +3,8 @@ import EventEmitter from "eventemitter3";
 import { PromisedDataChannel } from "enhanced-datachannel";
 import {
   SignalingPayload,
-  SignalingMediaNegotiationPayload
+  SignalingMediaNegotiationPayload,
+  SignalingMediaReplacePayload
 } from "./utils/types";
 import MediaSender from "./media-sender";
 import MediaReceiver from "./media-receiver";
@@ -36,20 +37,26 @@ class MediaHandler extends EventEmitter {
       "message",
       async (
         message: SignalingPayload,
-        resolve: (answer: RTCSessionDescription) => void,
+        resolve: () => void,
         reject: (err: Error) => void
       ) => {
         if (this._closed) return;
 
         switch (message.type) {
-          case "media-negotiation": {
+          case "media-negotiation":
             await this._handleMediaNegotiation(
               message as SignalingMediaNegotiationPayload,
               resolve,
               reject
             );
             break;
-          }
+          case "media-replace":
+            await this._handleMediaReplace(
+              message as SignalingMediaReplacePayload,
+              resolve,
+              reject
+            );
+            break;
         }
       }
     );
@@ -113,7 +120,7 @@ class MediaHandler extends EventEmitter {
 
     try {
       const answer: RTCSessionDescriptionInit = await this._signaling.send({
-        type: "mediachannel",
+        type: "media-negotiation",
         data: { offer: this._pc.localDescription, tidx: affectedTIdx }
       });
 
@@ -133,7 +140,7 @@ class MediaHandler extends EventEmitter {
     reject: (err: Error) => void
   ) {
     const { offer, tidx } = message.data;
-    debug(`_handleMessageEvent() for tidx: ${tidx}`);
+    debug(`_handleMediaNegotiation() for tidx: ${tidx}`);
 
     debug("handle offer SDP");
     debug(offer.sdp);
@@ -175,6 +182,21 @@ class MediaHandler extends EventEmitter {
     resolve(this._pc.localDescription);
   }
 
+  private _handleMediaReplace(
+    message: SignalingMediaReplacePayload,
+    resolve: () => void,
+    reject: (err: Error) => void
+  ) {
+    const { tidx } = message.data;
+    debug(`_handleMediaReplace() for tidx: ${tidx}`);
+
+    const receiver = this._receivers.get(tidx);
+    if (!receiver) return reject(new Error("Missing receiver!"));
+    receiver.emit("replace");
+
+    resolve();
+  }
+
   private _handleSenderEvent(sender: MediaSender) {
     sender.on(
       "@replace",
@@ -188,8 +210,13 @@ class MediaHandler extends EventEmitter {
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
-        await transceiver.sender
-          .replaceTrack(track)
+        await Promise.all([
+          transceiver.sender.replaceTrack(track),
+          this._signaling.send({
+            type: "media-replace",
+            data: { tidx }
+          })
+        ])
           .then(resolve)
           .catch(reject);
       }

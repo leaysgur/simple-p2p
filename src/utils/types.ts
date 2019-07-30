@@ -12,7 +12,14 @@ export interface SignalingMediaNegotiationPayload {
     tidx: number;
   };
 }
+export interface SignalingMediaReplacePayload {
+  type: "media-replace";
+  data: {
+    tidx: number;
+  };
+}
 
 export type SignalingPayload =
   | SignalingDataChannelPayload
+  | SignalingMediaReplacePayload
   | SignalingMediaNegotiationPayload;

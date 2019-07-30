@@ -72,7 +72,7 @@ class DataHandler extends EventEmitter {
 
     try {
       await this._signaling.send({
-        type: "datachannel",
+        type: "data-channel",
         data: { label, dcInit }
       });
     } catch (err) {

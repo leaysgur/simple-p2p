@@ -5,6 +5,7 @@ import EventEmitter from "eventemitter3";
 
 /**
  * Events
+ * @fires MediaHandler#replace
  * @fires MediaHandler#close
  */
 class Receiver extends EventEmitter {
