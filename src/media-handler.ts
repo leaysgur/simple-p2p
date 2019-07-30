@@ -174,7 +174,7 @@ class MediaHandler extends EventEmitter {
     if (transceiver.currentDirection === "inactive") {
       const receiver = this._receivers.get(tidx);
       if (!receiver) return reject(new Error("Missing receiver!"));
-      receiver.emit("close");
+      receiver._closeBySender();
     }
 
     debug("emit answer SDP");

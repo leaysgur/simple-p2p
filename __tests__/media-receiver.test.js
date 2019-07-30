@@ -34,18 +34,82 @@ afterEach(() => {
   m1 = m2 = null;
 });
 
-describe("MediaReceiver#close()", () => {
+describe("MediaReceiver#constructor", () => {
+  it("should be closed: false", async done => {
+    const receivers = [];
+    m2.on("receiver", r1 => receivers.push(r1));
+    await m1.sendTrack(at1).catch(done.fail);
+
+    expect(receivers.length).toBe(1);
+    expect(receivers[0].closed).toBeFalsy();
+    done();
+  });
+
+  it("should have track", async done => {
+    const receivers = [];
+    m2.on("receiver", r1 => receivers.push(r1));
+    await m1.sendTrack(at1).catch(done.fail);
+    await m1.sendTrack(vt1).catch(done.fail);
+
+    expect(receivers.length).toBe(2);
+    expect(receivers[0].track.kind).toBe(at1.kind);
+    expect(receivers[1].track.kind).toBe(vt1.kind);
+    done();
+  });
+});
+
+fdescribe("MediaReceiver#events@replace", () => {
+  it("should emit replace event by sender.replace()", async done => {
+    const replaced = [];
+    m2.on("receiver", r1 => {
+      r1.on("replace", () => replaced.push(r1));
+    });
+
+    const s1 = await m1.sendTrack(at1).catch(done.fail);
+    const at2 = at1.clone();
+    await s1.replace(at2).catch(done.fail);
+
+    expect(replaced.length).toBe(1);
+    expect(replaced[0].track.kind).toBe(at2.kind);
+    done();
+  });
+
+  it("should emit replace on proper receiver", async done => {
+    const receivers = [];
+    m2.on("receiver", r1 => receivers.push(r1));
+
+    await m1.sendTrack(vt1).catch(done.fail);
+    const s1 = await m1.sendTrack(at1).catch(done.fail);
+    await m1.sendTrack(vt1.clone()).catch(done.fail);
+    await m1.sendTrack(at1.clone()).catch(done.fail);
+
+    let replaced = false;
+    for (const r of receivers) {
+      const idx = receivers.indexOf(r);
+      r.on("replace", () => (replaced = idx === 1));
+    }
+
+    const at2 = at1.clone();
+    await s1.replace(at2).catch(done.fail);
+
+    expect(replaced).toBeTruthy();
+    expect(receivers[1].track.kind).toBe(at2.kind);
+    done();
+  });
+});
+
+describe("MediaReceiver#events@close", () => {
   it("should emit close event by sender.close()", async done => {
     const closed = [];
     m2.on("receiver", r1 => {
-      r1.on("close", () => {
-        closed.push(r1);
-      });
+      r1.on("close", () => closed.push(r1));
     });
 
     const s1 = await m1.sendTrack(at1).catch(done.fail);
     await s1.close();
+
     expect(closed.length).toBe(1);
+    expect(closed[0].closed).toBeTruthy();
     done();
   });
 
@@ -61,6 +125,7 @@ describe("MediaReceiver#close()", () => {
     await s1.close();
 
     expect(closed.length).toBe(1);
+    expect(closed[0].closed).toBeTruthy();
     expect(closed[0].track.kind).toBe(at1.kind);
     done();
   });
