@@ -58,7 +58,7 @@ describe("MediaReceiver#constructor", () => {
   });
 });
 
-fdescribe("MediaReceiver#events@replace", () => {
+describe("MediaReceiver#events@replace", () => {
   it("should emit replace event by sender.replace()", async done => {
     const replaced = [];
     m2.on("receiver", r1 => {
