@@ -40,6 +40,11 @@ class Receiver extends EventEmitter {
     return stats;
   }
 
+  _replacedBySender() {
+    debug("_replacedBySender()");
+    this.emit("replace");
+  }
+
   _endedBySender() {
     debug("_endedBySender()");
 

@@ -82,6 +82,7 @@ class MediaHandler extends EventEmitter {
       direction: "sendonly",
       streams: [this._stream]
     });
+    // use this index to communicate w/ remote transceivers
     const tidx = this._pc.getTransceivers().indexOf(transceiver);
 
     const offer = await this._pc.createOffer();
@@ -166,12 +167,15 @@ class MediaHandler extends EventEmitter {
     // must not be happend
     if (!transceiver) return reject(new Error("Missing transceiver!"));
 
+    // new transceiver added by remoteMediaHandler.sendTrack()
     if (transceiver.currentDirection === "recvonly") {
       const receiver = new MediaReceiver(transceiver.receiver.track, tidx);
       this._receivers.set(tidx, receiver);
       this._handleReceiverEvent(receiver);
       this.emit("receiver", receiver);
     }
+
+    // transceiver inactivated by remoteMediaSender.end()
     if (transceiver.currentDirection === "inactive") {
       const receiver = this._receivers.get(tidx);
       if (!receiver) return reject(new Error("Missing receiver!"));
@@ -193,7 +197,7 @@ class MediaHandler extends EventEmitter {
 
     const receiver = this._receivers.get(tidx);
     if (!receiver) return reject(new Error("Missing receiver!"));
-    receiver.emit("replace");
+    receiver._replacedBySender();
 
     resolve();
   }
@@ -234,6 +238,7 @@ class MediaHandler extends EventEmitter {
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
+        // inactivate m-section
         transceiver.sender.replaceTrack(null);
         this._pc.removeTrack(transceiver.sender);
         transceiver.direction = "inactive";

@@ -19,6 +19,7 @@ class DataHandler extends EventEmitter {
     super();
 
     this._closed = false;
+    // increment this for SCTP stream id
     this._dataChannelId = 10;
 
     this._pc = pc;

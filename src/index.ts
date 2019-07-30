@@ -11,10 +11,9 @@ export function createTransport(configuration: RTCConfiguration = {}) {
     bundlePolicy: "max-bundle",
     rtcpMuxPolicy: "require"
   });
-  debug("create PeerConnection w/", configuration);
+  debug("create RTCPeerConnection w/", configuration);
   const pc = new RTCPeerConnection(configuration);
 
-  // TODO: collect capabilities w/ another pc
   return new Transport(pc);
 }
 

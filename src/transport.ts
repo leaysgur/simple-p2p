@@ -62,8 +62,9 @@ class Transport extends EventEmitter {
       this.emit("error", err);
     });
 
-    this._mediaHandler = new MediaHandler(pc, this._signaling);
-    this._dataHandler = new DataHandler(pc, this._signaling);
+    // use these handlers for rtc
+    this._mediaHandler = new MediaHandler(this._pc, this._signaling);
+    this._dataHandler = new DataHandler(this._pc, this._signaling);
   }
 
   get closed() {
@@ -110,7 +111,8 @@ class Transport extends EventEmitter {
   }
 
   async startNegotiation(iceRestart = false) {
-    debug("startNegotiation()");
+    debug("startNegotiation() iceRestart ?", iceRestart);
+
     if (this._closed) throw new Error("Transport closed!");
 
     await this._pc
@@ -131,6 +133,7 @@ class Transport extends EventEmitter {
 
   async handleNegotiation(payload: NegotiaionPayload) {
     debug("handleNegotiation()");
+
     if (this._closed) {
       debug("transport already closed, ignore");
       return;
@@ -161,6 +164,7 @@ class Transport extends EventEmitter {
 
   private async _handleOffer(offer: RTCSessionDescription) {
     debug("handle offer SDP");
+
     if (offer.type !== "offer")
       throw new Error("Received SDP is not an offer!");
 
@@ -186,6 +190,7 @@ class Transport extends EventEmitter {
 
   private async _handleAnswer(answer: RTCSessionDescription) {
     debug("handle answer SDP");
+
     if (answer.type !== "answer")
       throw new Error("Received SDP is not an answer!");
 
@@ -239,6 +244,7 @@ class Transport extends EventEmitter {
   }
 
   private _updateConnectionState(newState: ConnectionState) {
+    // ignore duplicates
     if (this._connectionState === newState) return;
 
     this._connectionState = newState;
