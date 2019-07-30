@@ -8,3 +8,25 @@ export async function connectTransports(t1, t2, done) {
     new Promise(r => t2.once("open", r))
   ]);
 }
+
+let cachedStream;
+export async function getUserMedia(done) {
+  if (cachedStream) return streamToTracks(cachedStream);
+
+  return navigator.mediaDevices
+    .getUserMedia({
+      video: true,
+      audio: true
+    })
+    .then(stream => {
+      cachedStream = stream;
+      return streamToTracks(cachedStream);
+    })
+    .catch(done.fail);
+}
+
+function streamToTracks(stream) {
+  const [vt] = stream.getVideoTracks();
+  const [at] = stream.getAudioTracks();
+  return { vt, at };
+}

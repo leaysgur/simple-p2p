@@ -1,21 +1,16 @@
-import { connectTransports } from "./helper";
+import { connectTransports, getUserMedia } from "./helper";
 import { createTransport } from "../lib";
 
 let at1;
 let vt1;
 // do not gUM() for each test
-beforeAll(async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true
-  });
-
-  at1 = stream.getAudioTracks()[0];
-  vt1 = stream.getVideoTracks()[0];
+beforeAll(async done => {
+  const { vt, at } = await getUserMedia(done);
+  at1 = at;
+  vt1 = vt;
+  done();
 });
 afterAll(() => {
-  at1.stop();
-  vt1.stop();
   at1 = vt1 = null;
 });
 
