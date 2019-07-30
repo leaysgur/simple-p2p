@@ -1,3 +1,4 @@
+import { connectTransports } from "./helper";
 import { createTransport } from "../lib";
 
 let t1;
@@ -7,14 +8,8 @@ let d2;
 beforeEach(async done => {
   t1 = createTransport();
   t2 = createTransport();
-  t1.on("negotiation", msg => t2.handleNegotiation(msg).catch(done.fail));
-  t2.on("negotiation", msg => t1.handleNegotiation(msg).catch(done.fail));
-  await t1.startNegotiation().catch(done.fail);
+  await connectTransports(t1, t2, done);
 
-  await Promise.all([
-    new Promise(r => t1.once("open", r)),
-    new Promise(r => t2.once("open", r))
-  ]);
   d1 = t1.dataHandler;
   d2 = t2.dataHandler;
   done();

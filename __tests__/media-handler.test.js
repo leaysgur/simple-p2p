@@ -1,3 +1,4 @@
+import { connectTransports } from "./helper";
 import { createTransport } from "../lib";
 
 let at1;
@@ -25,14 +26,8 @@ let m2;
 beforeEach(async done => {
   t1 = createTransport();
   t2 = createTransport();
-  t1.on("negotiation", msg => t2.handleNegotiation(msg).catch(done.fail));
-  t2.on("negotiation", msg => t1.handleNegotiation(msg).catch(done.fail));
-  await t1.startNegotiation().catch(done.fail);
+  await connectTransports(t1, t2, done);
 
-  await Promise.all([
-    new Promise(r => t1.once("open", r)),
-    new Promise(r => t2.once("open", r))
-  ]);
   m1 = t1.mediaHandler;
   m2 = t2.mediaHandler;
   done();
@@ -70,52 +65,53 @@ describe("MediaHandler#close()", () => {
 
 describe("MediaHandler#sendTrack()", () => {
   it("should send audio", async done => {
-    let trackCount = 0;
-    m2.once("track", t => {
-      expect(t.kind).toBe(at1.kind);
-      trackCount++;
+    let recvCount = 0;
+    m2.once("receiver", r => {
+      expect(r.track.kind).toBe(at1.kind);
+      recvCount++;
       // if done() here, m1.sRD fails!
     });
     await m1.sendTrack(at1).catch(done.fail);
 
-    expect(trackCount).toBe(1);
+    expect(recvCount).toBe(1);
     done();
   });
 
   it("should send video", async done => {
-    let trackCount = 0;
-    m2.once("track", t => {
-      expect(t.kind).toBe(vt1.kind);
-      trackCount++;
+    let recvCount = 0;
+    m2.once("receiver", r => {
+      expect(r.track.kind).toBe(vt1.kind);
+      recvCount++;
       // if done() here, m1.sRD fails!
     });
     await m1.sendTrack(vt1).catch(done.fail);
 
-    expect(trackCount).toBe(1);
+    expect(recvCount).toBe(1);
     done();
   });
 
   it("should send video+audio", async done => {
-    let trackCount = 0;
-    m2.on("track", t => {
-      expect(t instanceof MediaStreamTrack).toBeTruthy();
-      trackCount++;
+    const receivers = [];
+    m2.on("receiver", r => {
+      receivers.push(r);
+      expect(r.track instanceof MediaStreamTrack).toBeTruthy();
     });
     await m1.sendTrack(vt1).catch(done.fail);
     await m1.sendTrack(at1).catch(done.fail);
 
-    expect(trackCount).toBe(2);
+    expect(receivers.length).toBe(2);
+    expect(receivers[0].track === receivers[1].track).toBeFalsy();
     done();
   });
 
   it("should send and send back", async done => {
     let trackCount = 0;
-    m1.on("track", t => {
-      expect(t.kind).toBe(at1.kind);
+    m1.on("receiver", r => {
+      expect(r.track.kind).toBe(at1.kind);
       trackCount++;
     });
-    m2.on("track", async t => {
-      expect(t.kind).toBe(vt1.kind);
+    m2.on("receiver", async r => {
+      expect(r.track.kind).toBe(vt1.kind);
       trackCount++;
       await m2.sendTrack(at1).catch(done.fail);
 

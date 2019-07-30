@@ -1,3 +1,4 @@
+import { connectTransports } from "./helper";
 import { createTransport } from "../lib";
 
 let at1;
@@ -21,27 +22,19 @@ afterAll(() => {
 let t1;
 let t2;
 let m1;
-let m2;
 beforeEach(async done => {
   t1 = createTransport();
   t2 = createTransport();
-  t1.on("negotiation", msg => t2.handleNegotiation(msg).catch(done.fail));
-  t2.on("negotiation", msg => t1.handleNegotiation(msg).catch(done.fail));
-  await t1.startNegotiation().catch(done.fail);
+  await connectTransports(t1, t2, done);
 
-  await Promise.all([
-    new Promise(r => t1.once("open", r)),
-    new Promise(r => t2.once("open", r))
-  ]);
   m1 = t1.mediaHandler;
-  m2 = t2.mediaHandler;
   done();
 });
 afterEach(() => {
   t1.close();
   t2.close();
   t1 = t2 = null;
-  m1 = m2 = null;
+  m1 = null;
 });
 
 describe("MediaSender#constructor()", () => {
