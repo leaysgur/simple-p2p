@@ -9,6 +9,7 @@ export interface SignalingOfferPayload {
   type: "mediachannel";
   data: {
     offer: RTCSessionDescription;
+    tidx: number;
   };
 }
 

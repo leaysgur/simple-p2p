@@ -9,13 +9,13 @@ import EventEmitter from "eventemitter3";
  */
 class Receiver extends EventEmitter {
   _track: MediaStreamTrack;
-  _mid: string;
+  _tdix: number;
 
-  constructor(track: MediaStreamTrack, mid: string) {
+  constructor(track: MediaStreamTrack, tdix: number) {
     super();
 
     this._track = track;
-    this._mid = mid;
+    this._tdix = tdix;
   }
 
   get track() {

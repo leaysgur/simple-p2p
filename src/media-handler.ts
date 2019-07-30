@@ -14,8 +14,8 @@ const debug = _debug("simple-p2p:media-handler");
 class MediaHandler extends EventEmitter {
   _closed: boolean;
   _stream: MediaStream;
-  _senders: Map<string, MediaSender>;
-  _receivers: Map<string, MediaReceiver>;
+  _senders: Map<number, MediaSender>;
+  _receivers: Map<number, MediaReceiver>;
   _pc: RTCPeerConnection;
   _signaling: PromisedDataChannel;
 
@@ -67,13 +67,12 @@ class MediaHandler extends EventEmitter {
       direction: "sendonly",
       streams: [this._stream]
     });
-
-    const mid = String(transceiver.mid);
+    const tidx = this._pc.getTransceivers().indexOf(transceiver);
 
     const offer = await this._pc.createOffer();
 
     try {
-      await this._startNegotiation(offer);
+      await this._startNegotiation(offer, tidx);
     } catch (err) {
       debug("negotiation failed", err);
       // dispose transceiver...
@@ -84,14 +83,17 @@ class MediaHandler extends EventEmitter {
       throw new Error("Remote handler failed to receive track!");
     }
 
-    const sender = new MediaSender(track, mid);
-    this._senders.set(mid, sender);
+    const sender = new MediaSender(track, tidx);
+    this._senders.set(tidx, sender);
     this._handleSenderEvent(sender);
     return sender;
   }
 
-  private async _startNegotiation(offer: RTCSessionDescriptionInit) {
-    debug("_startNegotiation()");
+  private async _startNegotiation(
+    offer: RTCSessionDescriptionInit,
+    affectedTIdx: number
+  ) {
+    debug(`_startNegotiation() for tidx: ${affectedTIdx}`);
 
     await this._pc.setLocalDescription(offer);
     // must not be happend
@@ -104,7 +106,7 @@ class MediaHandler extends EventEmitter {
     try {
       const answer: RTCSessionDescriptionInit = await this._signaling.send({
         type: "mediachannel",
-        data: { offer: this._pc.localDescription }
+        data: { offer: this._pc.localDescription, tidx: affectedTIdx }
       });
 
       debug("recv answer");
@@ -122,8 +124,9 @@ class MediaHandler extends EventEmitter {
     resolve: (res: RTCSessionDescription) => void,
     reject: (err: Error) => void
   ) {
-    debug("_handleMessageEvent()");
-    const { offer } = message.data;
+    const { offer, tidx } = message.data;
+    debug(`_handleMessageEvent() for tidx: ${tidx}`);
+
     debug("handle offer SDP");
     debug(offer.sdp);
 
@@ -148,11 +151,9 @@ class MediaHandler extends EventEmitter {
     // must not be happend
     if (!transceiver) return reject(new Error("Missing transceiver!"));
 
-    const mid = String(transceiver.mid);
-
     if (transceiver.currentDirection === "recvonly") {
-      const receiver = new MediaReceiver(transceiver.receiver.track, mid);
-      this._receivers.set(mid, receiver);
+      const receiver = new MediaReceiver(transceiver.receiver.track, tidx);
+      this._receivers.set(tidx, receiver);
       this.emit("receiver", receiver);
     }
     // else transceiver inactivated
@@ -166,12 +167,12 @@ class MediaHandler extends EventEmitter {
     sender.on(
       "@replace",
       async (
-        mid: string,
+        tidx: number,
         track: MediaStreamTrack,
         resolve: () => void,
         reject: (err: Error) => void
       ) => {
-        const transceiver = this._pc.getTransceivers().find(t => t.mid === mid);
+        const transceiver = this._pc.getTransceivers()[tidx];
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
@@ -185,11 +186,11 @@ class MediaHandler extends EventEmitter {
     sender.on(
       "@close",
       async (
-        mid: string,
+        tidx: number,
         resolve: () => void,
         reject: (err: Error) => void
       ) => {
-        const transceiver = this._pc.getTransceivers().find(t => t.mid === mid);
+        const transceiver = this._pc.getTransceivers()[tidx];
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
@@ -198,7 +199,7 @@ class MediaHandler extends EventEmitter {
         transceiver.direction = "inactive";
 
         const offer = await this._pc.createOffer();
-        await this._startNegotiation(offer)
+        await this._startNegotiation(offer, tidx)
           .then(resolve)
           .catch(reject);
       }
