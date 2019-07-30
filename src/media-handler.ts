@@ -14,7 +14,8 @@ const debug = _debug("simple-p2p:media-handler");
 class MediaHandler extends EventEmitter {
   _closed: boolean;
   _stream: MediaStream;
-  _transceivers: Map<string, RTCRtpTransceiver>;
+  _senders: Map<string, MediaSender>;
+  _receivers: Map<string, MediaReceiver>;
   _pc: RTCPeerConnection;
   _signaling: PromisedDataChannel;
 
@@ -23,8 +24,8 @@ class MediaHandler extends EventEmitter {
 
     this._closed = false;
     this._stream = new MediaStream();
-    this._transceivers = new Map();
-
+    this._senders = new Map();
+    this._receivers = new Map();
     this._pc = pc;
     this._signaling = signaling;
 
@@ -68,7 +69,6 @@ class MediaHandler extends EventEmitter {
     });
 
     const mid = String(transceiver.mid);
-    this._transceivers.set(mid, transceiver);
 
     const offer = await this._pc.createOffer();
 
@@ -85,6 +85,7 @@ class MediaHandler extends EventEmitter {
     }
 
     const sender = new MediaSender(track, mid);
+    this._senders.set(mid, sender);
     this._handleSenderEvent(sender);
     return sender;
   }
@@ -148,10 +149,10 @@ class MediaHandler extends EventEmitter {
     if (!transceiver) return reject(new Error("Missing transceiver!"));
 
     const mid = String(transceiver.mid);
-    this._transceivers.set(mid, transceiver);
 
     if (transceiver.currentDirection === "recvonly") {
       const receiver = new MediaReceiver(transceiver.receiver.track, mid);
+      this._receivers.set(mid, receiver);
       this.emit("receiver", receiver);
     }
     // else transceiver inactivated
@@ -170,7 +171,7 @@ class MediaHandler extends EventEmitter {
         resolve: () => void,
         reject: (err: Error) => void
       ) => {
-        const transceiver = this._transceivers.get(mid);
+        const transceiver = this._pc.getTransceivers().find(t => t.mid === mid);
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
@@ -188,7 +189,7 @@ class MediaHandler extends EventEmitter {
         resolve: () => void,
         reject: (err: Error) => void
       ) => {
-        const transceiver = this._transceivers.get(mid);
+        const transceiver = this._pc.getTransceivers().find(t => t.mid === mid);
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
