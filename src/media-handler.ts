@@ -147,6 +147,9 @@ class MediaHandler extends EventEmitter {
     // must not be happend
     if (!transceiver) return reject(new Error("Missing transceiver!"));
 
+    const mid = String(transceiver.mid);
+    this._transceivers.set(mid, transceiver);
+
     if (transceiver.currentDirection === "recvonly") {
       const receiver = new MediaReceiver(transceiver.receiver.track);
       this.emit("receiver", receiver);
