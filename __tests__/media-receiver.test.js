@@ -35,13 +35,13 @@ afterEach(() => {
 });
 
 describe("MediaReceiver#constructor", () => {
-  it("should be closed: false", async done => {
+  it("should be ended: false", async done => {
     const receivers = [];
     m2.on("receiver", r1 => receivers.push(r1));
     await m1.sendTrack(at1).catch(done.fail);
 
     expect(receivers.length).toBe(1);
-    expect(receivers[0].closed).toBeFalsy();
+    expect(receivers[0].ended).toBeFalsy();
     done();
   });
 
@@ -99,34 +99,34 @@ describe("MediaReceiver#events@replace", () => {
 });
 
 describe("MediaReceiver#events@close", () => {
-  it("should emit close event by sender.close()", async done => {
-    const closed = [];
+  it("should emit close event by sender.end()", async done => {
+    const ended = [];
     m2.on("receiver", r1 => {
-      r1.on("close", () => closed.push(r1));
+      r1.on("ended", () => ended.push(r1));
     });
 
     const s1 = await m1.sendTrack(at1).catch(done.fail);
-    await s1.close();
+    await s1.end().catch(done.fail);
 
-    expect(closed.length).toBe(1);
-    expect(closed[0].closed).toBeTruthy();
+    expect(ended.length).toBe(1);
+    expect(ended[0].ended).toBeTruthy();
     done();
   });
 
-  it("should be closed w/ proper receiver", async done => {
-    const closed = [];
+  it("should be ended w/ proper receiver", async done => {
+    const ended = [];
     m2.on("receiver", r => {
-      r.on("close", () => closed.push(r));
+      r.on("ended", () => ended.push(r));
     });
 
     const s1 = await m1.sendTrack(at1).catch(done.fail);
     await m1.sendTrack(vt1).catch(done.fail);
 
-    await s1.close();
+    await s1.end().catch(done.fail);
 
-    expect(closed.length).toBe(1);
-    expect(closed[0].closed).toBeTruthy();
-    expect(closed[0].track.kind).toBe(at1.kind);
+    expect(ended.length).toBe(1);
+    expect(ended[0].ended).toBeTruthy();
+    expect(ended[0].track.kind).toBe(at1.kind);
     done();
   });
 });

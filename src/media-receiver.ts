@@ -6,34 +6,34 @@ const debug = _debug("simple-p2p:receiver");
 /**
  * Events
  * @fires MediaHandler#replace
- * @fires MediaHandler#close
+ * @fires MediaHandler#end
  */
 class Receiver extends EventEmitter {
-  _closed: boolean;
+  _ended: boolean;
   _track: MediaStreamTrack;
   _tdix: number;
 
   constructor(track: MediaStreamTrack, tdix: number) {
     super();
 
-    this._closed = false;
+    this._ended = false;
     this._track = track;
     this._tdix = tdix;
   }
 
-  get closed() {
-    return this._closed;
+  get ended() {
+    return this._ended;
   }
 
   get track() {
     return this._track;
   }
 
-  _closeBySender() {
-    debug("_closeBySender()");
+  _endedBySender() {
+    debug("_endedBySender()");
 
-    this._closed = true;
-    this.emit("close");
+    this._ended = true;
+    this.emit("ended");
   }
 }
 

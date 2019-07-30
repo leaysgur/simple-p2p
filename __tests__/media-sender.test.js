@@ -33,26 +33,26 @@ afterEach(() => {
 });
 
 describe("MediaSender#constructor()", () => {
-  it("should be closed: false", async done => {
+  it("should be ended: false", async done => {
     const s1 = await m1.sendTrack(at1).catch(done.fail);
-    expect(s1.closed).toBeFalsy();
+    expect(s1.ended).toBeFalsy();
     done();
   });
 });
 
-describe("MediaSender#close()", () => {
-  it("should be closed: true", async done => {
+describe("MediaSender#end()", () => {
+  it("should be ended: true", async done => {
     const s1 = await m1.sendTrack(at1).catch(done.fail);
-    await s1.close().catch(done.fail);
-    expect(s1.closed).toBeTruthy();
+    await s1.end().catch(done.fail);
+    expect(s1.ended).toBeTruthy();
     done();
   });
 
-  it("should throw after closed", async done => {
+  it("should throw after ended", async done => {
     const s1 = await m1.sendTrack(at1).catch(done.fail);
-    await s1.close().catch(done.fail);
+    await s1.end().catch(done.fail);
     await s1.replace(at1).catch(err => {
-      expect(err).toMatch(/closed/);
+      expect(err).toMatch(/ended/);
       done();
     });
   });
