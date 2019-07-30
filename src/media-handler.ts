@@ -74,9 +74,9 @@ class MediaHandler extends EventEmitter {
   async sendTrack(track: MediaStreamTrack) {
     debug("sendTrack()");
 
+    if (this._closed) throw new Error("MediaHandler already closed!");
     if (!(track instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
-    if (this._closed) throw new Error("MediaHandler already closed!");
 
     const transceiver = this._pc.addTransceiver(track, {
       direction: "sendonly",

@@ -27,9 +27,9 @@ class Sender extends EventEmitter {
   async replace(newTrack: MediaStreamTrack) {
     debug("replace()");
 
+    if (this._ended) throw new Error("Already ended sender!");
     if (!(newTrack instanceof MediaStreamTrack))
       throw new Error("Missing MediaStreamTrack!");
-    if (this._ended) throw new Error("Already ended sender!");
 
     if (this._track === newTrack)
       throw new Error("Do not need to replace the same track!");

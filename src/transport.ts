@@ -158,6 +158,9 @@ class Transport extends EventEmitter {
 
   async getStats() {
     debug("getStats()");
+
+    if (this._closed) throw new Error("Transport closed!");
+
     const stats = await this._pc.getStats();
     return stats;
   }
