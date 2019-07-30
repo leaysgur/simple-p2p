@@ -147,7 +147,7 @@ class MediaHandler extends EventEmitter {
     if (this._pc.localDescription === null)
       return reject(new Error("Can't generate answer SDP!"));
 
-    const transceiver = this._pc.getTransceivers().pop();
+    const transceiver = this._pc.getTransceivers()[tidx];
     // must not be happend
     if (!transceiver) return reject(new Error("Missing transceiver!"));
 
@@ -156,7 +156,11 @@ class MediaHandler extends EventEmitter {
       this._receivers.set(tidx, receiver);
       this.emit("receiver", receiver);
     }
-    // else transceiver inactivated
+    if (transceiver.currentDirection === "inactive") {
+      const receiver = this._receivers.get(tidx);
+      if (!receiver) return reject(new Error("Missing receiver!"));
+      receiver.emit("close");
+    }
 
     debug("emit answer SDP");
     debug(this._pc.localDescription.sdp);
