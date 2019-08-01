@@ -30,6 +30,10 @@ class Receiver extends EventEmitter {
     return this._track;
   }
 
+  get kind() {
+    return this._track.kind;
+  }
+
   async getStats() {
     debug("getStats()");
 

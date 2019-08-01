@@ -30,6 +30,10 @@ class Sender extends EventEmitter {
     return this._track;
   }
 
+  get kind() {
+    return this._track.kind;
+  }
+
   async replace(newTrack: MediaStreamTrack) {
     debug("replace()");
 
