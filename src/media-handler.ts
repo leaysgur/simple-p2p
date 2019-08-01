@@ -92,7 +92,7 @@ class MediaHandler extends EventEmitter {
     } catch (err) {
       debug("negotiation failed", err);
       // dispose transceiver...
-      transceiver.sender.replaceTrack(null);
+      await transceiver.sender.replaceTrack(null);
       this._pc.removeTrack(transceiver.sender);
       transceiver.direction = "inactive";
 
@@ -239,7 +239,7 @@ class MediaHandler extends EventEmitter {
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
         // inactivate m-section
-        transceiver.sender.replaceTrack(null);
+        await transceiver.sender.replaceTrack(null);
         this._pc.removeTrack(transceiver.sender);
         transceiver.direction = "inactive";
 
