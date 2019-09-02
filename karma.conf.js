@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 module.exports = config =>
   config.set({
     // logLevel: config.LOG_DEBUG,

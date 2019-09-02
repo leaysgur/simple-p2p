@@ -57,7 +57,7 @@ class DataHandler extends EventEmitter {
     this._closed = true;
   }
 
-  async createChannel(label: string = "", dcInit: RTCDataChannelInit = {}) {
+  async createChannel(label = "", dcInit: RTCDataChannelInit = {}) {
     debug("createChannel()");
 
     if (this._closed) throw new Error("DataHandler already closed!");
