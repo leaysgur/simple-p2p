@@ -38,7 +38,7 @@ await new Promise(r => transport.once("open", r));
 
 ### Send media
 
-```js`
+```js
 const { mediaHandler } = transport;
 
 const track = await navigator.mediaDevices.getUserMedia({ video: true })
@@ -56,9 +56,9 @@ await mediaSender.replace(newTrack);
 await mediaSender.end();
 ```
 
-### Receive media`
+### Receive media
 
-```js`
+```js
 // when remote sendTrack() has called,
 mediaHandler.on("receiver", mediaReceiver => {
   const { track, kind } = mediaReceiver;
@@ -75,11 +75,11 @@ mediaHandler.on("receiver", mediaReceiver => {
 
 ### Use Data channel
 
-```js`
+```js
 const { dataHandler } = transport;
 
 // when remote createChannel() has called,
-dataHandler.on("channel", dc => {});
+dataHandler.on("channel", channel => {});
 
 // returns RTCDataChannel instance
 const channel1 = await dataHandler.createChannel();
