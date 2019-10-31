@@ -74,14 +74,15 @@ class Sender extends EventEmitter {
     return params;
   }
 
-  async setParameters(params: RTCRtpSendParameters) {
-    debug("setParameters()");
-    debug(params);
+  async updateParameters(
+    updater: (params: RTCRtpSendParameters) => RTCRtpSendParameters
+  ) {
+    debug("updateParameters()");
 
     if (this._ended) throw new Error("Already ended sender!");
 
     await new Promise((resolve, reject) => {
-      this.emit("@setParameters", this._tidx, params, resolve, reject);
+      this.emit("@updateParameters", this._tidx, updater, resolve, reject);
     });
   }
 

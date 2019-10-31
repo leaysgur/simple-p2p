@@ -267,10 +267,10 @@ class MediaHandler extends EventEmitter {
     );
 
     sender.on(
-      "@setParameters",
+      "@updateParameters",
       async (
         tidx: number,
-        params: RTCRtpSendParameters,
+        updater: (params: RTCRtpSendParameters) => RTCRtpSendParameters,
         resolve: () => void,
         reject: (err: Error) => void
       ) => {
@@ -278,8 +278,16 @@ class MediaHandler extends EventEmitter {
         // must not be happend
         if (!transceiver) return reject(new Error("Missing transceiver!"));
 
+        let newParams;
+        try {
+          const oldParams = transceiver.sender.getParameters();
+          newParams = updater(oldParams);
+        } catch (err) {
+          return reject(err);
+        }
+
         await transceiver.sender
-          .setParameters(params)
+          .setParameters(newParams)
           .then(resolve)
           .catch(reject);
       }
