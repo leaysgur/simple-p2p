@@ -156,6 +156,12 @@ class Transport extends EventEmitter {
     await this.startNegotiation(true);
   }
 
+  updateIceServers(iceServers: RTCIceServer[]) {
+    const config = this._pc.getConfiguration();
+    config.iceServers = iceServers;
+    this._pc.setConfiguration(config);
+  }
+
   async getStats() {
     debug("getStats()");
 
