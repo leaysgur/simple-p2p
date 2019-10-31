@@ -63,6 +63,29 @@ class Sender extends EventEmitter {
     this._ended = true;
   }
 
+  async getParameters(): Promise<RTCRtpSendParameters> {
+    debug("getParameters()");
+
+    if (this._ended) throw new Error("Already ended sender!");
+
+    const params = (await new Promise((resolve, reject) => {
+      this.emit("@getParameters", this._tidx, resolve, reject);
+    })) as RTCRtpSendParameters;
+    return params;
+  }
+
+  async updateParameters(
+    updater: (params: RTCRtpSendParameters) => RTCRtpSendParameters
+  ) {
+    debug("updateParameters()");
+
+    if (this._ended) throw new Error("Already ended sender!");
+
+    await new Promise((resolve, reject) => {
+      this.emit("@updateParameters", this._tidx, updater, resolve, reject);
+    });
+  }
+
   async getStats(): Promise<RTCStatsReport> {
     debug("getStats()");
 
