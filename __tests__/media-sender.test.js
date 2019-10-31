@@ -98,3 +98,30 @@ describe("MediaSender#getStats()", () => {
     done();
   });
 });
+
+fdescribe("MediaSender#getParameters()", () => {
+  it("should get params", async done => {
+    const s1 = await m1.sendTrack(vt1).catch(done.fail);
+    const params = await s1.getParameters().catch(done.fail);
+    // Firefox ~70 returns empty object
+    expect(params).toBeTruthy();
+    done();
+  });
+});
+
+describe("MediaSender#updateParameters()", () => {
+  it("should update params", async done => {
+    const s1 = await m1.sendTrack(vt1).catch(done.fail);
+
+    await s1
+      .updateParameters(params => {
+        params.encodings = [{ maxBitrate: 10000 }];
+        return params;
+      })
+      .catch(done.fail);
+
+    const updated = await s1.getParameters().catch(done.fail);
+    expect(updated.encodings[0].maxBitrate).toBe(10000);
+    done();
+  });
+});
