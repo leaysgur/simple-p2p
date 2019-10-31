@@ -115,7 +115,13 @@ describe("MediaSender#updateParameters()", () => {
 
     await s1
       .updateParameters(params => {
-        params.encodings = [{ maxBitrate: 10000 }];
+        if (params.encodings && params.encodings[0]) {
+          // for Chrome, Safari: need to update props
+          params.encodings[0].maxBitrate = 10000;
+        } else {
+          // for Firefox: can assign directly
+          params.encodings = [{ maxBitrate: 10000 }];
+        }
         return params;
       })
       .catch(done.fail);
