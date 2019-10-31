@@ -197,7 +197,7 @@ describe("Transport#getStats()", () => {
   });
 });
 
-fdescribe("Transport#updateIceServers()", () => {
+describe("Transport#updateIceServers()", () => {
   it("should update", done => {
     const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
 
@@ -213,5 +213,10 @@ fdescribe("Transport#updateIceServers()", () => {
         done.fail("should not throw");
       }
     }
+  });
+
+  it("should throw if transport closed", () => {
+    t1.close();
+    expect(() => t1.updateIceServers([])).toThrowError(/closed/);
   });
 });
