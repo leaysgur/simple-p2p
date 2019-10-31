@@ -153,7 +153,24 @@ class Transport extends EventEmitter {
 
   async restartIce() {
     debug("restartIce()");
+
+    if (this._closed) throw new Error("Transport closed!");
+
     await this.startNegotiation(true);
+  }
+
+  updateIceServers(iceServers: RTCIceServer[]) {
+    debug("updateIceServers()");
+    debug(iceServers);
+
+    if (this._closed) throw new Error("Transport closed!");
+    // Firefox does not support. at least Firefox ~71
+    if ("setConfiguration" in this._pc == false)
+      throw new Error("Your browser does not support setConfiguraton()...");
+
+    const config = this._pc.getConfiguration();
+    config.iceServers = iceServers;
+    this._pc.setConfiguration(config);
   }
 
   async getStats(): Promise<RTCStatsReport> {
