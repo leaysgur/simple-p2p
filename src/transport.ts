@@ -156,7 +156,7 @@ class Transport extends EventEmitter {
     await this.startNegotiation(true);
   }
 
-  async getStats() {
+  async getStats(): Promise<RTCStatsReport> {
     debug("getStats()");
 
     if (this._closed) throw new Error("Transport closed!");

@@ -7,7 +7,9 @@ import MediaReceiver from "./media-receiver";
 
 const debug = _debug("simple-p2p");
 
-export function createTransport(configuration: RTCConfiguration = {}) {
+export function createTransport(
+  configuration: RTCConfiguration = {}
+): Transport {
   Object.assign(configuration, {
     bundlePolicy: "max-bundle",
     rtcpMuxPolicy: "require"
