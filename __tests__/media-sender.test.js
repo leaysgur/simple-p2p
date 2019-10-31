@@ -99,7 +99,7 @@ describe("MediaSender#getStats()", () => {
   });
 });
 
-fdescribe("MediaSender#getParameters()", () => {
+describe("MediaSender#getParameters()", () => {
   it("should get params", async done => {
     const s1 = await m1.sendTrack(vt1).catch(done.fail);
     const params = await s1.getParameters().catch(done.fail);
