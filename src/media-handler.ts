@@ -251,6 +251,41 @@ class MediaHandler extends EventEmitter {
     );
 
     sender.on(
+      "@getParameters",
+      async (
+        tidx: number,
+        resolve: (params: RTCRtpSendParameters) => void,
+        reject: (err: Error) => void
+      ) => {
+        const transceiver = this._pc.getTransceivers()[tidx];
+        // must not be happend
+        if (!transceiver) return reject(new Error("Missing transceiver!"));
+
+        const params = transceiver.sender.getParameters();
+        resolve(params);
+      }
+    );
+
+    sender.on(
+      "@setParameters",
+      async (
+        tidx: number,
+        params: RTCRtpSendParameters,
+        resolve: () => void,
+        reject: (err: Error) => void
+      ) => {
+        const transceiver = this._pc.getTransceivers()[tidx];
+        // must not be happend
+        if (!transceiver) return reject(new Error("Missing transceiver!"));
+
+        await transceiver.sender
+          .setParameters(params)
+          .then(resolve)
+          .catch(reject);
+      }
+    );
+
+    sender.on(
       "@stats",
       async (
         tidx: number,
