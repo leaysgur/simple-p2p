@@ -1,6 +1,6 @@
 # simple-p2p
 
-The simple module to achieve P2P communication for modern browsers.
+The simple module to achieve WebRTC P2P communication for modern browsers.
 
 - Chrome 75+
 - Firefox 68+
@@ -12,9 +12,13 @@ The simple module to achieve P2P communication for modern browsers.
 npm i simple-p2p
 ```
 
+Type defenitions are included.
+
 ## API overview
 
 See [API](./API.md) for details.
+
+### Set up Transport
 
 ```js
 import { createTransport } from "simple-p2p";
@@ -30,17 +34,31 @@ await transport.startNegotiation();
 
 // wait for transport open
 await new Promise(r => transport.once("open", r));
+```
 
-// use DataHandler and/or MediaHandler
-const { dataHandler, mediaHandler } = transport;
+### Send media
 
-// when remote createChannel() has called,
-dataHandler.on("channel", dc => {});
+```js`
+const { mediaHandler } = transport;
 
-// returns RTCDataChannel instance
-const channel1 = await dataHandler.createChannel();
-const channel2 = await dataHandler.createChannel("unreliable", { ordered: false });
+const track = await navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => stream.getTracks()[0]);
 
+// returns MediaSender instance
+const mediaSender = await mediaHandler.sendTrack(track);
+
+// replace track which has same kind
+const newTrack = await navigator.mediaDevices.getDisplayMedia({ video: true })
+  .then(stream => stream.getTracks()[0]);
+await mediaSender.replace(newTrack);
+
+// end sending track
+await mediaSender.end();
+```
+
+### Receive media`
+
+```js`
 // when remote sendTrack() has called,
 mediaHandler.on("receiver", mediaReceiver => {
   const { track, kind } = mediaReceiver;
@@ -53,17 +71,20 @@ mediaHandler.on("receiver", mediaReceiver => {
   // remove from DOM
   mediaReceiver.on("end", () => $media.remove());
 });
+```
 
-const track = await navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => stream.getTracks()[0]);
-// returns MediaSender instance
-const mediaSender = await mediaHandler.sendTrack(track);
+### Use Data channel
 
-// replace track which has same kind
-const newTrack = await navigator.mediaDevices.getDisplayMedia({ video: true })
-  .then(stream => stream.getTracks()[0]);
-await mediaSender.replace(newTrack);
+```js`
+const { dataHandler } = transport;
 
-// end sending track
-await mediaSender.end();
+// when remote createChannel() has called,
+dataHandler.on("channel", dc => {});
+
+// returns RTCDataChannel instance
+const channel1 = await dataHandler.createChannel();
+const channel2 = await dataHandler.createChannel("unreliable", { ordered: false });
+
+channel1.addEventListener("message", msg => {});
+channel1.send("Hello");
 ```
