@@ -40,6 +40,8 @@ This represents the WebRTC transport holds the peer connection and data channel 
   - restart ICE connection
 - async `getStats()`
   - get transport stats report
+- `updateIceServers(iceServers)`
+  - update ICE servers
 - `close()`
   - close transport
 
@@ -127,6 +129,10 @@ Manages `MediaStreamTrack` to send.
   - emits `ended` event on remote `MediaReceiver`
 - async `getStats()`
   - get sender stats report
+- async `getParameters()`
+  - get sender `RTCRtpSendParameters`
+- async `updateParameters(updater)`
+  - update(get+set) sender `RTCRtpSendParameters`
 
 #### Events
 
