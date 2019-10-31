@@ -173,7 +173,7 @@ class Transport extends EventEmitter {
     this._pc.setConfiguration(config);
   }
 
-  async getStats() {
+  async getStats(): Promise<RTCStatsReport> {
     debug("getStats()");
 
     if (this._closed) throw new Error("Transport closed!");

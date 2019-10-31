@@ -71,7 +71,7 @@ class MediaHandler extends EventEmitter {
     this._closed = true;
   }
 
-  async sendTrack(track: MediaStreamTrack) {
+  async sendTrack(track: MediaStreamTrack): Promise<MediaSender> {
     debug("sendTrack()");
 
     if (this._closed) throw new Error("MediaHandler already closed!");
@@ -289,7 +289,7 @@ class MediaHandler extends EventEmitter {
       "@stats",
       async (
         tidx: number,
-        resolve: () => void,
+        resolve: (stats: RTCStatsReport) => void,
         reject: (err: Error) => void
       ) => {
         const transceiver = this._pc.getTransceivers()[tidx];

@@ -34,14 +34,14 @@ class Receiver extends EventEmitter {
     return this._track.kind;
   }
 
-  async getStats() {
+  async getStats(): Promise<RTCStatsReport> {
     debug("getStats()");
 
     if (this._ended) throw new Error("Already ended receiver!");
 
-    const stats = await new Promise((resolve, reject) => {
+    const stats = (await new Promise((resolve, reject) => {
       this.emit("@stats", this._tidx, resolve, reject);
-    });
+    })) as RTCStatsReport;
     return stats;
   }
 

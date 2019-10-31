@@ -96,4 +96,5 @@ class Sender extends EventEmitter {
     return stats;
   }
 }
+
 export default Sender;
