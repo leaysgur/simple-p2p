@@ -196,3 +196,27 @@ describe("Transport#getStats()", () => {
     expect(stats instanceof RTCStatsReport).toBeTruthy();
   });
 });
+
+describe("Transport#updateIceServers()", () => {
+  it("should update", done => {
+    const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+
+    try {
+      t1.updateIceServers(iceServers);
+      t1.updateIceServers([]);
+      done();
+    } catch (err) {
+      if (/firefox/i.test(navigator.userAgent)) {
+        expect(err).toMatch("not support");
+        done();
+      } else {
+        done.fail("should not throw");
+      }
+    }
+  });
+
+  it("should throw if transport closed", () => {
+    t1.close();
+    expect(() => t1.updateIceServers([])).toThrowError(/closed/);
+  });
+});
