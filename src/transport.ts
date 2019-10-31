@@ -164,6 +164,9 @@ class Transport extends EventEmitter {
     debug(iceServers);
 
     if (this._closed) throw new Error("Transport closed!");
+    // Firefox does not support. at least Firefox ~71
+    if ("setConfiguration" in this._pc == false)
+      throw new Error("Your browser does not support setConfiguraton()...");
 
     const config = this._pc.getConfiguration();
     config.iceServers = iceServers;
