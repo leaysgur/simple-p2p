@@ -133,12 +133,13 @@ describe("MediaReceiver#events@close", () => {
 
 describe("MediaReceiver#getStats()", () => {
   it("should get receiver stats", async done => {
+    let stats;
     m2.on("receiver", async r => {
-      const stats = await r.getStats().catch(done.fail);
-
-      expect(stats instanceof RTCStatsReport).toBeTruthy();
-      done();
+      stats = await r.getStats().catch(done.fail);
     });
     await m1.sendTrack(at1).catch(done.fail);
+
+    expect(stats instanceof RTCStatsReport).toBeTruthy();
+    done();
   });
 });
