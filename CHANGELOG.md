@@ -1,5 +1,11 @@
 # ChangeLlog
 
+## [0.2.1] - 2020-01-06
+
+### Misc
+
+- Update dev/prod dependencies.
+
 ## [0.2.0] - 2019-10-31
 
 ### Added
@@ -33,6 +39,7 @@
 
 - Released!
 
+[0.2.1]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.1
 [0.2.0]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.0
 [0.1.0]: https://github.com/leader22/simple-p2p/releases/tag/v0.1.0
 [0.0.2]: https://github.com/leader22/simple-p2p/releases/tag/v0.0.2
