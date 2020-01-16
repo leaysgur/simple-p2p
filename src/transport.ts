@@ -164,8 +164,8 @@ class Transport extends EventEmitter {
     debug(iceServers);
 
     if (this._closed) throw new Error("Transport closed!");
-    // Firefox does not support. at least Firefox ~71
-    if ("setConfiguration" in this._pc == false)
+    // Firefox does not support. at least Firefox ~74
+    if (typeof RTCPeerConnection.prototype.setConfiguration !== "function")
       throw new Error("Your browser does not support setConfiguraton()...");
 
     const config = this._pc.getConfiguration();

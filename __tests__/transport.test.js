@@ -206,7 +206,7 @@ describe("Transport#updateIceServers()", () => {
       t1.updateIceServers([]);
       done();
     } catch (err) {
-      if (/firefox/i.test(navigator.userAgent)) {
+      if (typeof RTCPeerConnection.prototype.setConfiguration !== "function") {
         expect(err).toMatch("not support");
         done();
       } else {
