@@ -1,5 +1,11 @@
 # ChangeLlog
 
+## [0.2.2] - 2020-01-16
+
+### Misc
+
+- Do not use `userAgent` string for feature detection
+
 ## [0.2.1] - 2020-01-06
 
 ### Misc
@@ -39,6 +45,7 @@
 
 - Released!
 
+[0.2.2]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.2
 [0.2.1]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.1
 [0.2.0]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.0
 [0.1.0]: https://github.com/leader22/simple-p2p/releases/tag/v0.1.0
