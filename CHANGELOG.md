@@ -1,5 +1,12 @@
 # ChangeLlog
 
+## [0.2.3] - 2020-03-02
+
+### Misc
+
+- Update dev/prod dependencies.
+- Mark private fields as private
+
 ## [0.2.2] - 2020-01-16
 
 ### Misc
@@ -45,6 +52,7 @@
 
 - Released!
 
+[0.2.3]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.3
 [0.2.2]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.2
 [0.2.1]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.1
 [0.2.0]: https://github.com/leader22/simple-p2p/releases/tag/v0.2.0
