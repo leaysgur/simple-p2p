@@ -32,12 +32,12 @@ type ConnectionState =
  * @fires Transport#error
  */
 class Transport extends EventEmitter {
-  _closed: boolean;
-  _connectionState: ConnectionState;
-  _pc: RTCPeerConnection;
-  _signaling: PromisedDataChannel;
-  _mediaHandler: MediaHandler;
-  _dataHandler: DataHandler;
+  private _closed: boolean;
+  private _connectionState: ConnectionState;
+  private _pc: RTCPeerConnection;
+  private _signaling: PromisedDataChannel;
+  private _mediaHandler: MediaHandler;
+  private _dataHandler: DataHandler;
 
   constructor(pc: RTCPeerConnection) {
     super();

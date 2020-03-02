@@ -16,12 +16,12 @@ const debug = _debug("simple-p2p:media-handler");
  * @fires MediaHandler#receiver
  */
 class MediaHandler extends EventEmitter {
-  _closed: boolean;
-  _stream: MediaStream;
-  _senders: Map<number, MediaSender>;
-  _receivers: Map<number, MediaReceiver>;
-  _pc: RTCPeerConnection;
-  _signaling: PromisedDataChannel;
+  private _closed: boolean;
+  private _stream: MediaStream;
+  private _senders: Map<number, MediaSender>;
+  private _receivers: Map<number, MediaReceiver>;
+  private _pc: RTCPeerConnection;
+  private _signaling: PromisedDataChannel;
 
   constructor(pc: RTCPeerConnection, signaling: PromisedDataChannel) {
     super();

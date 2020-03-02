@@ -10,10 +10,10 @@ const debug = _debug("simple-p2p:data-handler");
  * @fires DataHandler#channel
  */
 class DataHandler extends EventEmitter {
-  _closed: boolean;
-  _dataChannelId: number;
-  _pc: RTCPeerConnection;
-  _signaling: PromisedDataChannel;
+  private _closed: boolean;
+  private _dataChannelId: number;
+  private _pc: RTCPeerConnection;
+  private _signaling: PromisedDataChannel;
 
   constructor(pc: RTCPeerConnection, signaling: PromisedDataChannel) {
     super();

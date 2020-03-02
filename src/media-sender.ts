@@ -10,9 +10,9 @@ const debug = _debug("simple-p2p:sender");
  * @fires MediaSender#@stats
  */
 class Sender extends EventEmitter {
-  _ended: boolean;
-  _track: MediaStreamTrack;
-  _tidx: number;
+  private _ended: boolean;
+  private _track: MediaStreamTrack;
+  private _tidx: number;
 
   constructor(track: MediaStreamTrack, tidx: number) {
     super();
