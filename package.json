@@ -44,7 +44,7 @@
     "karma-rollup-preprocessor": "^7.0.3",
     "karma-safari-launcher": "^1.0.0",
     "prettier": "^2.0.2",
-    "rollup": "^1.32.0",
+    "rollup": "^2.3.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "sdp-transform": "^2.14.0",
